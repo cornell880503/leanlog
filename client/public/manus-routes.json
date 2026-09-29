@@ -7,6 +7,7 @@
     { "path": "/progress", "title": "進度" },
     { "path": "/history", "title": "歷史" },
     { "path": "/history/:id", "title": "訓練詳細" },
-    { "path": "/settings", "title": "設定" }
+    { "path": "/settings", "title": "設定" },
+    { "path": "/guide", "title": "手冊" }
   ]
 }

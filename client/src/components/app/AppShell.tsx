@@ -2,7 +2,7 @@ import { startLogin } from "@/const";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { LOGO_URL } from "@/lib/theme";
-import { ChevronLeft, History, Home, LineChart, Scale, Settings } from "lucide-react";
+import { BookOpen, ChevronLeft, History, Home, LineChart, Scale, Settings } from "lucide-react";
 import type { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 
@@ -11,6 +11,7 @@ const TABS = [
   { href: "/body", label: "身體", icon: Scale },
   { href: "/progress", label: "進度", icon: LineChart },
   { href: "/history", label: "歷史", icon: History },
+  { href: "/guide", label: "手冊", icon: BookOpen },
 ];
 
 export function AppShell({
@@ -79,7 +80,7 @@ export function AppShell({
 function TabBar({ location }: { location: string }) {
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-background/95 backdrop-blur safe-bottom">
-      <div className="mx-auto grid max-w-[480px] grid-cols-4">
+      <div className="mx-auto grid max-w-[480px] grid-cols-5">
         {TABS.map(t => {
           const active = t.href === "/" ? location === "/" : location.startsWith(t.href);
           const Icon = t.icon;

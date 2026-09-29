@@ -15,6 +15,7 @@ const Progress = lazy(() => import("./pages/Progress"));
 const History = lazy(() => import("./pages/History"));
 const HistoryDetail = lazy(() => import("./pages/HistoryDetail"));
 const Settings = lazy(() => import("./pages/Settings"));
+const Guide = lazy(() => import("./pages/Guide"));
 
 function PageFallback() {
   return (
@@ -38,6 +39,7 @@ function Router() {
         <Route path="/history" component={History} />
         <Route path="/history/:id">{params => <HistoryDetail params={params} />}</Route>
         <Route path="/settings" component={Settings} />
+        <Route path="/guide" component={Guide} />
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
       </Switch>
