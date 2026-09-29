@@ -40,85 +40,77 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Chalk & Iron brand tokens */
+  --color-brand: #c6f432;
+  --color-brand-ink: #0f1113;
+  --color-surface: #181b1f;
+  --color-surface-2: #20242a;
+  --color-line: #262a30;
+  --color-chalk: #ededE8;
+  --color-dim: #8a9099;
+  --color-ok: #4ade80;
+  --color-warn: #f5b642;
+  --color-bad: #f2545b;
+  --color-leg: #c6f432;
+  --color-back: #5cc8ff;
+  --color-chest: #ff8a5c;
+  --color-vb: #f5d547;
+  --color-other: #b8a4ff;
+  --font-num: "Barlow Condensed", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei",
+    "Segoe UI", sans-serif;
 }
 
-:root {
-  --primary: var(--color-blue-700);
-  --primary-foreground: var(--color-blue-50);
-  --sidebar-primary: var(--color-blue-600);
-  --sidebar-primary-foreground: var(--color-blue-50);
-  --chart-1: var(--color-blue-300);
-  --chart-2: var(--color-blue-500);
-  --chart-3: var(--color-blue-600);
-  --chart-4: var(--color-blue-700);
-  --chart-5: var(--color-blue-800);
-  --radius: 0.65rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.235 0.015 65);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.235 0.015 65);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.235 0.015 65);
-  --secondary: oklch(0.98 0.001 286.375);
-  --secondary-foreground: oklch(0.4 0.015 65);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: oklch(0.967 0.001 286.375);
-  --accent-foreground: oklch(0.141 0.005 285.823);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.623 0.214 259.815);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.235 0.015 65);
-  --sidebar-accent: oklch(0.967 0.001 286.375);
-  --sidebar-accent-foreground: oklch(0.141 0.005 285.823);
-  --sidebar-border: oklch(0.92 0.004 286.32);
-  --sidebar-ring: oklch(0.623 0.214 259.815);
-}
-
+:root,
 .dark {
-  --primary: var(--color-blue-700);
-  --primary-foreground: var(--color-blue-50);
-  --sidebar-primary: var(--color-blue-500);
-  --sidebar-primary-foreground: var(--color-blue-50);
-  --background: oklch(0.141 0.005 285.823);
-  --foreground: oklch(0.85 0.005 65);
-  --card: oklch(0.21 0.006 285.885);
-  --card-foreground: oklch(0.85 0.005 65);
-  --popover: oklch(0.21 0.006 285.885);
-  --popover-foreground: oklch(0.85 0.005 65);
-  --secondary: oklch(0.24 0.006 286.033);
-  --secondary-foreground: oklch(0.7 0.005 65);
-  --muted: oklch(0.274 0.006 286.033);
-  --muted-foreground: oklch(0.705 0.015 286.067);
-  --accent: oklch(0.274 0.006 286.033);
-  --accent-foreground:  oklch(0.92 0.005 65);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.488 0.243 264.376);
-  --chart-1: var(--color-blue-300);
-  --chart-2: var(--color-blue-500);
-  --chart-3: var(--color-blue-600);
-  --chart-4: var(--color-blue-700);
-  --chart-5: var(--color-blue-800);
-  --sidebar: oklch(0.21 0.006 285.885);
-  --sidebar-foreground: oklch(0.85 0.005 65);
-  --sidebar-accent: oklch(0.274 0.006 286.033);
-  --sidebar-accent-foreground:  oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.488 0.243 264.376);
+  --radius: 0.875rem;
+  --background: #0f1113;
+  --foreground: #ededE8;
+  --card: #181b1f;
+  --card-foreground: #ededE8;
+  --popover: #1c2025;
+  --popover-foreground: #ededE8;
+  --primary: #c6f432;
+  --primary-foreground: #0f1113;
+  --secondary: #20242a;
+  --secondary-foreground: #ededE8;
+  --muted: #20242a;
+  --muted-foreground: #8a9099;
+  --accent: #262a30;
+  --accent-foreground: #ededE8;
+  --destructive: #f2545b;
+  --destructive-foreground: #0f1113;
+  --border: #262a30;
+  --input: #30353d;
+  --ring: #c6f432;
+  --chart-1: #c6f432;
+  --chart-2: #5cc8ff;
+  --chart-3: #ff8a5c;
+  --chart-4: #f5d547;
+  --chart-5: #b8a4ff;
+  --sidebar: #181b1f;
+  --sidebar-foreground: #ededE8;
+  --sidebar-primary: #c6f432;
+  --sidebar-primary-foreground: #0f1113;
+  --sidebar-accent: #262a30;
+  --sidebar-accent-foreground: #ededE8;
+  --sidebar-border: #262a30;
+  --sidebar-ring: #c6f432;
+  color-scheme: dark;
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+  }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased;
+    overscroll-behavior-y: none;
   }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
@@ -134,44 +126,68 @@
 }
 
 @layer components {
-  /**
-   * Custom container utility that centers content and adds responsive padding.
-   *
-   * This overrides Tailwind's default container behavior to:
-   * - Auto-center content (mx-auto)
-   * - Add responsive horizontal padding
-   * - Set max-width for large screens
-   *
-   * Usage: <div className="container">...</div>
-   *
-   * For custom widths, use max-w-* utilities directly:
-   * <div className="max-w-6xl mx-auto px-4">...</div>
-   */
   .container {
     width: 100%;
     margin-left: auto;
     margin-right: auto;
-    padding-left: 1rem; /* 16px - mobile padding */
+    padding-left: 1rem;
     padding-right: 1rem;
   }
-
   .flex {
     min-height: 0;
     min-width: 0;
   }
 
-  @media (min-width: 640px) {
-    .container {
-      padding-left: 1.5rem; /* 24px - tablet padding */
-      padding-right: 1.5rem;
-    }
+  /* Big tabular numerals */
+  .num {
+    font-family: var(--font-num);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
   }
 
-  @media (min-width: 1024px) {
-    .container {
-      padding-left: 2rem; /* 32px - desktop padding */
-      padding-right: 2rem;
-      max-width: 1280px; /* Standard content width */
-    }
+  /* Tactile press feedback */
+  .press {
+    transition: transform 120ms ease, background-color 150ms ease, color 150ms ease, border-color 150ms ease;
   }
+  .press:active {
+    transform: scale(0.97);
+  }
+
+  .card-iron {
+    background: var(--color-surface);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Plate-style progress bar */
+  .plate-track {
+    height: 14px;
+    border-radius: 4px;
+    background: repeating-linear-gradient(90deg, #262a30 0 10px, #20242a 10px 12px);
+    overflow: hidden;
+  }
+  .plate-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: var(--color-brand);
+    transition: width 300ms ease;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.fade-up {
+  animation: fade-up 150ms ease-out both;
 }

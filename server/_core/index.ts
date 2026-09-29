@@ -22,6 +22,11 @@ async function startServer() {
   // tRPC API
   app.use(
     "/api/trpc",
+    (_req, res, next) => {
+      // Personal training data: never store in shared or browser caches.
+      res.setHeader("Cache-Control", "private, no-store");
+      next();
+    },
     createExpressMiddleware({
       router: appRouter,
       createContext,

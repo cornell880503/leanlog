@@ -58,10 +58,26 @@ export function serveStatic(app: Express) {
     );
   }
 
-  app.use(express.static(distPath));
+  app.use(
+    express.static(distPath, {
+      index: false,
+      setHeaders(res, filePath) {
+        const rel = path.relative(distPath, filePath).split(path.sep).join("/");
+        if (rel.startsWith("assets/")) {
+          // Vite emits content-hashed file names here.
+          res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+        } else if (rel.endsWith(".html") || rel === "manus-routes.json") {
+          res.setHeader("Cache-Control", "no-cache");
+        } else {
+          res.setHeader("Cache-Control", "public, max-age=86400");
+        }
+      },
+    })
+  );
 
   // fall through to index.html if the file doesn't exist
   app.use("*", (_req, res) => {
+    res.setHeader("Cache-Control", "no-cache");
     res.sendFile(path.resolve(distPath, "index.html"));
   });
 }
