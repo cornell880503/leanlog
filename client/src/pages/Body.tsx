@@ -1,5 +1,5 @@
 import { AppShell } from "@/components/app/AppShell";
-import { Card, CardTitle, Pick, numOptions, range, withValue } from "@/components/app/controls";
+import { Card, CardTitle, LoadError, Pick, numOptions, range, withValue } from "@/components/app/controls";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { DateChips } from "@/components/workout/SessionMeta";
@@ -260,7 +260,9 @@ function ScanCard() {
       >
         Boditrax 掃描
       </CardTitle>
-      {scans.data && scans.data.length > 0 ? (
+      {scans.isError ? (
+        <LoadError what="掃描紀錄" onRetry={() => void scans.refetch()} />
+      ) : scans.data && scans.data.length > 0 ? (
         <ul className="divide-y divide-line text-sm">
           {[...scans.data].reverse().map(s => (
             <li key={s.id} className="flex items-center gap-2 py-2">

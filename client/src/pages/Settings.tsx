@@ -1,5 +1,5 @@
 import { AppShell } from "@/components/app/AppShell";
-import { Card, CardTitle, Chips, Pick, numOptions, range, withValue } from "@/components/app/controls";
+import { Card, CardTitle, Chips, LoadError, Pick, numOptions, range, withValue } from "@/components/app/controls";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { todayLocal } from "@/lib/format";
@@ -111,7 +111,9 @@ export default function Settings() {
         ) : undefined
       }
     >
-      {!form ? (
+      {!form && q.isError ? (
+        <LoadError what="設定" onRetry={() => void q.refetch()} />
+      ) : !form ? (
         <div className="h-64 animate-pulse rounded-xl bg-surface" />
       ) : (
         <div className="space-y-4 fade-up">

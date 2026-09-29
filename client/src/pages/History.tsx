@@ -1,4 +1,5 @@
 import { AppShell } from "@/components/app/AppShell";
+import { LoadError } from "@/components/app/controls";
 import { dateLabel, fmt, todayLocal } from "@/lib/format";
 import { TYPE_COLOR, TYPE_LABEL } from "@/lib/theme";
 import { trpc } from "@/lib/trpc";
@@ -29,6 +30,8 @@ export default function History() {
             <div key={i} className="h-20 animate-pulse rounded-xl bg-surface" />
           ))}
         </div>
+      ) : list.isError ? (
+        <LoadError what="歷史紀錄" onRetry={() => void list.refetch()} />
       ) : groups.length === 0 ? (
         <div className="card-iron p-6 text-center">
           <p className="font-medium">還沒有任何訓練紀錄</p>

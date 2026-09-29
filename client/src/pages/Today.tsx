@@ -1,5 +1,5 @@
 import { AppShell } from "@/components/app/AppShell";
-import { Card, CardTitle } from "@/components/app/controls";
+import { Card, CardTitle, LoadError } from "@/components/app/controls";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -91,7 +91,13 @@ export default function Today() {
               )}
             </>
           ) : (
+            summary.isError ? (
+            <div className="mt-2">
+              <LoadError what="今日建議" onRetry={() => void summary.refetch()} />
+            </div>
+          ) : (
             <div className="mt-2 h-10 w-32 animate-pulse rounded bg-surface-2" />
+          )
           )}
         </Card>
 
@@ -164,7 +170,11 @@ export default function Today() {
               )}
             </>
           ) : (
+            summary.isError ? (
+            <p className="text-sm text-dim">本週摘要暫時讀不到，按上方「重新載入」。</p>
+          ) : (
             <div className="h-24 animate-pulse rounded bg-surface-2" />
+          )
           )}
         </Card>
 

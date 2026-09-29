@@ -1,5 +1,5 @@
 import { AppShell } from "@/components/app/AppShell";
-import { Card, CardTitle, Chips, Pick, PlateBar, Stat } from "@/components/app/controls";
+import { Card, CardTitle, Chips, LoadError, Pick, PlateBar, Stat } from "@/components/app/controls";
 import { fmt, shortDate, todayLocal } from "@/lib/format";
 import { trpc, type RouterOutputs } from "@/lib/trpc";
 import { cn } from "@/lib/utils";
@@ -38,7 +38,9 @@ export default function Progress() {
 
   return (
     <AppShell title="進度">
-      {!d ? (
+      {!d && q.isError ? (
+        <LoadError what="進度" onRetry={() => void q.refetch()} />
+      ) : !d ? (
         <div className="space-y-4">
           {[0, 1, 2].map(i => (
             <div key={i} className="h-56 animate-pulse rounded-xl bg-surface" />

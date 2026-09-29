@@ -169,3 +169,20 @@ export function withValue(values: number[], v: number): number[] {
   if (values.some(x => Math.abs(x - v) < 1e-9)) return values;
   return [...values, v].sort((a, b) => a - b);
 }
+
+/** Shown when a read failed after retries, so errors never look like empty data. */
+export function LoadError({ onRetry, what = "資料" }: { onRetry: () => void; what?: string }) {
+  return (
+    <div role="alert" className="rounded-lg border border-bad/40 bg-bad/10 p-4 text-sm">
+      <p className="font-semibold text-bad">{what}載入失敗</p>
+      <p className="mt-1 text-dim">可能是網路不穩，資料沒有遺失。</p>
+      <button
+        type="button"
+        onClick={onRetry}
+        className="press mt-3 h-11 rounded-lg bg-surface-2 px-4 font-semibold text-chalk"
+      >
+        重新載入
+      </button>
+    </div>
+  );
+}
