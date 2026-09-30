@@ -111,3 +111,10 @@ temp/
 
 # Manus version file (auto-generated, not part of source)
 client/public/__manus__/version.json
+
+# Analysis tool: generated outputs (regenerate with `python3 tracker.py report`)
+analysis/charts/*
+!analysis/charts/body_map.png
+analysis/reports/
+analysis/inbox/
+__pycache__/

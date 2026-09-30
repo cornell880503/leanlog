@@ -1,9 +1,9 @@
 /**
  * Export one user's data from the database into the CSV layout used by the
- * offline analysis tool (fitness-tracker/data/*.csv).
+ * offline analysis tool (analysis/data/*.csv).
  *
  * Usage:
- *   pnpm tsx scripts/export-for-manus.ts --out ../fitness-tracker/data
+ *   pnpm tsx scripts/export-for-manus.ts --out analysis/data
  *   pnpm tsx scripts/export-for-manus.ts --out /tmp/x --user 123
  *
  * Without --user, the site owner (earliest account) is exported.

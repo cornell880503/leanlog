@@ -1,0 +1,2 @@
+date,time,device,location,weight_kg,fat_mass_kg,ffm_kg,muscle_mass_kg,water_kg,ecw_kg,icw_kg,visceral_fat,cellular_integrity,metabolic_age,physique_score,leg_muscle_score,bmr_score,boditrax_score,muscle_core,muscle_larm,muscle_rarm,muscle_lleg,muscle_rleg,fat_core,fat_larm,fat_rarm,fat_lleg,fat_rleg,fasted,notes
+2026-08-02,09:22,Boditrax,Fitness First One Raffles Quay,68.6,9.5,59.1,56.0,40.7,15.0,25.7,5,6.6,18,8,104,14,802,29.6,2.9,3.2,10.1,10.2,4.7,0.3,0.3,2.1,2.1,unknown,基準掃描；體重由 FFM+FM 推算（使用者自述空腹體重 70-71）

@@ -1,0 +1,48 @@
+exercise,aliases,primary,secondary,category,bw_factor
+深蹲,背蹲舉|槓鈴深蹲|back squat|squat,股四頭|臀,腿後|核心,compound,0
+前蹲舉,前蹲|front squat,股四頭,臀|核心,compound,0
+高腳杯深蹲,goblet squat,股四頭|臀,核心,compound,0
+硬舉,傳統硬舉|deadlift,腿後|臀|背,股四頭|核心,compound,0
+六角槓硬舉,trap bar deadlift|hex bar,股四頭|臀|腿後,背,compound,0
+羅馬尼亞硬舉,RDL|romanian deadlift,腿後|臀,背,compound,0
+保加利亞分腿蹲,BSS|bulgarian split squat|分腿蹲,股四頭|臀,腿後,compound,0
+弓箭步,lunge|行走弓箭步,股四頭|臀,腿後,compound,0
+登階,step up,股四頭|臀,,compound,0
+腿推,leg press|腿推機,股四頭|臀,,compound,0
+腿伸展,leg extension,股四頭,,isolation,0
+腿彎舉,leg curl|坐姿腿彎舉|俯臥腿彎舉,腿後,,isolation,0
+北歐腿彎舉,nordic curl|nordic,腿後,,isolation,0
+臀推,hip thrust|槓鈴臀推,臀,腿後,compound,0
+提踵,calf raise|站姿提踵|坐姿提踵,小腿,,isolation,0
+臥推,槓鈴臥推|bench press|bench,胸,三頭|肩,compound,0
+啞鈴臥推,db bench press|db press,胸,三頭|肩,compound,0
+上斜臥推,上斜啞鈴臥推|incline bench|incline db press,胸|肩,三頭,compound,0
+雙槓撐體,dips|dip,胸|三頭,肩,compound,0.9
+伏地挺身,push up|pushup,胸,三頭|肩,compound,0.65
+夾胸,飛鳥|cable fly|pec deck|蝴蝶機,胸,,isolation,0
+引體向上,pull up|pullup|chin up|反手引體,背,二頭,compound,1.0
+滑輪下拉,lat pulldown|下拉,背,二頭,compound,0
+槓鈴划船,barbell row|俯身划船,背,二頭|肩,compound,0
+啞鈴划船,單手划船|db row,背,二頭,compound,0
+坐姿划船,seated row|cable row|划船機,背,二頭,compound,0
+直臂下拉,straight arm pulldown,背,,isolation,0
+肩推,槓鈴肩推|啞鈴肩推|overhead press|ohp|shoulder press,肩,三頭,compound,0
+側平舉,lateral raise|啞鈴側平舉|滑輪側平舉,肩,,isolation,0
+臉拉,face pull,肩,背,isolation,0
+反向飛鳥,reverse fly|rear delt fly,肩,背,isolation,0
+二頭彎舉,彎舉|biceps curl|curl|啞鈴彎舉|錘式彎舉|hammer curl,二頭,,isolation,0
+三頭下壓,triceps pushdown|pushdown,三頭,,isolation,0
+過頭三頭伸展,overhead triceps extension|法式推舉,三頭,,isolation,0
+懸垂舉腿,hanging leg raise|舉腿,核心,,isolation,0
+捲腹,crunch|cable crunch|滑輪捲腹,核心,,isolation,0
+健腹輪,ab wheel|ab rollout,核心,,isolation,0
+棒式,plank,核心,,isolation,0
+懸垂上膊,hang clean|power clean|上膊,臀|腿後,背,power,0
+壺鈴擺盪,kb swing|kettlebell swing,臀|腿後,,power,0
+負重跳躍,jump squat|負重跳,股四頭|臀,,power,0
+箱跳,box jump,,,plyo,0
+深跳,depth jump|跳深,,,plyo,0
+反向跳,cmj|countermovement jump|原地垂直跳,,,plyo,0
+助跑跳,approach jump|助跑摸高,,,plyo,0
+連續跳,pogo|pogo jump|跳繩,,,plyo,0
+單腳跳,single leg hop|單腳彈跳,,,plyo,0

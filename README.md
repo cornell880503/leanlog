@@ -1,14 +1,43 @@
-# 薄肌訓練記錄
+# LeanLog：薄肌＋垂直跳躍 訓練記錄
 
-React / Express / tRPC / Drizzle starter, adapted from the Sandbox web-db-user template.
+個人用、手機優先的訓練記錄網頁。目標是**薄肌**（體脂 10–12%、FFMI 19.5–21）和**助跑摸高 320 cm**。重訓、排球、體重、Boditrax 掃描與摸高測試都用點選記錄，不需要打字；網頁會自動算容量、有效組數、PR、每週各肌群組數、跳躍負荷與目標進度。
 
-- `pnpm dev`: development server; honors `PORT` (default 3000).
-- `pnpm build` / `pnpm start`: build and serve `dist/index.js` and `dist/public/`.
-- `pnpm db:migrate`: apply checked-in migrations. `pnpm db:push`: generate and apply new schema changes.
-- `pnpm check` / `pnpm test`: types and application tests.
+正式網址：<https://leanlog-mnupsqrw.manus.space>
 
-Start with the Webdev skill's default-template guide. Platform login, storage, payments and service contracts live in its shared references; read the relevant capability before extending its helper.
+## 功能
 
-`server/_core/publicConfig.ts` exposes only named public runtime values. Private keys stay server-side. The platform serves managed `/manus-storage/` assets; the application does not register a second proxy.
+| 分頁 | 內容 |
+| --- | --- |
+| 今天 | 依循環（腿 → 背 → 胸 → 休，有打球多休一天）建議今天練什麼，點一下開始；本週摘要 |
+| 重訓記錄 | 自動帶入上次的動作、重量、次數；逐組打勾、RPE 快速鈕、照上次、加減組；結束後顯示摘要 |
+| 排球記錄 | 類型、時長、強度、跳躍量、膝蓋狀況，全部點選 |
+| 身體 | 空腹體重、摸高測試、Boditrax 掃描（含分段肌肉與脂肪） |
+| 進度 | 薄肌目標與里程碑、摸高進度、每週有效組數、力量與體重趨勢 |
+| 歷史 | 所有訓練列表，可檢視、修改、刪除 |
+| 手冊 | 用即時資料呈現的基準分析、目標、訓練與飲食原則、量測規範 |
+| 設定 | 目標、站立摸高、每週組數目標、訓練循環、匯出資料 |
 
-Platform configuration is readable and editable through `webdev.config`. Default settings are initial values, not enforced constraints. The agent may modify the files, commands and configuration or follow the flexible guide for another stack.
+內建約 160 個常見動作（含肌群、器材、類型），也可以新增自訂動作。
+
+## 資料夾結構
+
+| 路徑 | 內容 |
+| --- | --- |
+| `client/` | React 前端（頁面在 `client/src/pages/`，元件在 `client/src/components/`） |
+| `server/` | Express + tRPC 後端（功能路由 `server/routers/features.ts`、資料存取 `server/data/`）與測試 |
+| `shared/` | 前後端共用：動作庫、設定、分析計算（有效組、e1RM、週統計、體組成、摸高、手冊） |
+| `drizzle/` | 資料庫結構與遷移檔 |
+| `scripts/` | `export-for-manus.ts`（匯出 CSV 給分析工具）、`seed-baseline.ts`（補匯入基準資料） |
+| `analysis/` | 離線分析工具 `tracker.py`、目標設定 `config.json`、CSV 資料，以及訓練追蹤手冊 `README.md` |
+| `docs/` | 產品規格草稿、實作計畫、身體組成地圖概念圖 |
+
+## 開發指令
+
+- `pnpm dev`：開發伺服器（預設 port 3000）
+- `pnpm check` / `pnpm test`：型別檢查與測試
+- `pnpm build` / `pnpm start`：建置並啟動正式版
+- `pnpm db:migrate`：套用遷移；`pnpm db:push`：修改結構後產生並套用新遷移
+- `pnpm export:manus --out analysis/data`：把資料庫資料匯出成分析工具用的 CSV
+- `cd analysis && python3 tracker.py report`：產生週報、儀表板與圖表（需要 pandas、matplotlib）
+
+需要的環境變數（資料庫連線、登入等）由部署平台提供，不在這個儲存庫裡。

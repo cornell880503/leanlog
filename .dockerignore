@@ -5,3 +5,7 @@ dist
 .env.*
 .manus-logs
 *.manus-starter-*
+
+# Not part of the web app image
+analysis
+docs

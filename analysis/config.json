@@ -1,0 +1,83 @@
+{
+  "profile": {
+    "sex": "male",
+    "age": 27,
+    "height_cm": 179,
+    "sport": "volleyball",
+    "timezone": "Asia/Singapore"
+  },
+  "body_targets": {
+    "bf_min": 10.0,
+    "bf_max": 12.0,
+    "ffmi_min": 19.5,
+    "ffmi_max": 21.0,
+    "achieve_rule": "連續兩次掃描（同一台 Boditrax）體脂率與 FFMI 都落在目標區內"
+  },
+  "milestones": [
+    {
+      "name": "M1",
+      "by": "2026-12-31",
+      "ffm_min_kg": 60.5,
+      "bf_max": 13.5
+    },
+    {
+      "name": "M2",
+      "by": "2027-03-31",
+      "ffm_min_kg": 61.5,
+      "bf_max": 12.5
+    },
+    {
+      "name": "最終",
+      "by": "2027-07-31",
+      "ffm_min_kg": 62.5,
+      "bf_max": 12.0
+    }
+  ],
+  "jump": {
+    "target_reach_cm": 320
+  },
+  "hard_set_rpe_min": 7,
+  "weekly_set_targets": {
+    "胸": [
+      10,
+      16
+    ],
+    "背": [
+      12,
+      18
+    ],
+    "肩": [
+      10,
+      16
+    ],
+    "二頭": [
+      8,
+      14
+    ],
+    "三頭": [
+      8,
+      14
+    ],
+    "核心": [
+      6,
+      10
+    ],
+    "股四頭": [
+      6,
+      10
+    ],
+    "腿後": [
+      6,
+      10
+    ],
+    "臀": [
+      6,
+      10
+    ],
+    "小腿": [
+      0,
+      8
+    ]
+  },
+  "load_spike_ratio": 1.3
+}
