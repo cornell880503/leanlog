@@ -300,7 +300,8 @@ function ScanDialog({
   last?: Record<string, unknown>;
 }) {
   const utils = trpc.useUtils();
-  const [date, setDate] = useState(todayLocal());
+  const dateParam = usePastDateParam();
+  const [date, setDate] = useState(dateParam ?? todayLocal());
   const [time, setTime] = useState("09:00");
   const [vals, setVals] = useState<Record<string, string>>({});
   useEffect(() => {
@@ -311,8 +312,8 @@ function ScanDialog({
       init[k] = typeof v === "number" ? String(v) : "";
     }
     setVals(init);
-    setDate(todayLocal());
-  }, [open, last]);
+    setDate(dateParam ?? todayLocal());
+  }, [open, last, dateParam]);
 
   const create = trpc.body.createScan.useMutation({
     onSuccess: () => {
@@ -361,7 +362,11 @@ function ScanDialog({
             <input
               type="date"
               value={date}
-              onChange={e => setDate(e.target.value)}
+              max={todayLocal()}
+              onChange={e => {
+                const v = e.target.value;
+                if (/^\d{4}-\d{2}-\d{2}$/.test(v) && v <= todayLocal()) setDate(v);
+              }}
               className="mt-1 h-11 w-full rounded-lg border border-input bg-surface-2 px-2 text-base text-chalk"
             />
           </label>

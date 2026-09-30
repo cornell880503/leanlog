@@ -124,6 +124,26 @@ describe("strength goals", () => {
     expect(g.progress).toBeCloseTo(64.2 / 70, 2);
   });
 
+  it("treats a step reached only after its deadline as missed, and skips it for 'next'", () => {
+    const g = strengthGoal({ exerciseKey: "bench_press", ratio: 1 }, ex("bench_press"), {
+      ...base,
+      milestones: [
+        { name: "M1", by: "2026-09-10", ffmMinKg: 60, bfMax: 14 },
+        { name: "M2", by: "2026-12-31", ffmMinKg: 61, bfMax: 13 },
+        { name: "最終", by: "2027-03-31", ffmMinKg: 62, bfMax: 12 },
+      ],
+      sessions: [benchSession(1, "2026-08-01", 50, 5), benchSession(2, "2026-09-20", 55, 5)],
+    });
+    const m1 = g.steps[0];
+    expect(m1.name).toBe("M1");
+    // 64.2 e1RM on 9/20 passes M1's kg, but only after its 9/10 deadline.
+    expect(g.currentE1rm!).toBeGreaterThan(m1.kg);
+    expect(m1.status).toBe("missed");
+    expect(m1.metOn).toBeNull();
+    expect(g.next?.name).toBe("M2");
+    expect(g.next!.kg).toBeGreaterThan(g.currentE1rm!);
+  });
+
   it("marks stale when nothing in the last 8 weeks, and achieved when current ≥ target", () => {
     const stale = strengthGoal({ exerciseKey: "bench_press", ratio: 1 }, ex("bench_press"), {
       ...base,

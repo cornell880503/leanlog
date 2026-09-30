@@ -82,6 +82,7 @@ export default function Today() {
               {today.slice(0, 4)} 第 {weekNumber(today)} 週・本週第 {dayOfWeek(today)} 天
             </span>
           </div>
+          {s && <LastSessionLine last={s.lastSession} today={today} />}
           <div className="mt-3 text-xs text-dim">今天建議</div>
           {suggestion ? (
             <>
@@ -352,5 +353,20 @@ function BasisLine({ suggestion, today }: { suggestion: Suggestion; today: strin
         {suggestion.type === "rest" ? `今天休息，下次${TYPE_LABEL[suggestion.nextStrength]}` : `今天${TYPE_LABEL[suggestion.type]}`}
       </span>
     </div>
+  );
+}
+
+/** "上次訓練：9/28（一）背日・2 天前" — any session type, independent of the suggestion. */
+function LastSessionLine({ last, today }: { last: { date: string; type: SessionType } | null; today: string }) {
+  if (!last) return <p className="mt-2 text-xs text-dim">上次訓練：還沒有任何紀錄</p>;
+  return (
+    <p className="mt-2 text-xs">
+      <span className="text-dim">{last.date === today ? "今天已練：" : "上次訓練："}</span>
+      {last.date !== today && <span className="font-semibold">{mdw(last.date)} </span>}
+      <span className="font-semibold" style={{ color: TYPE_COLOR[last.type] }}>
+        {TYPE_LABEL[last.type]}
+      </span>
+      {last.date !== today && <span className="text-dim">・{daysAgo(last.date, today)}</span>}
+    </p>
   );
 }

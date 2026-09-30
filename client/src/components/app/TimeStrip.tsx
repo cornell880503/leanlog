@@ -16,7 +16,7 @@ function dayNum(d: string): number {
 }
 
 /**
- * Past 6 days (what actually happened) + today + next 3 days (projected from
+ * Past 7 days (what actually happened) + today + next 3 days (projected from
  * the rotation). Past and today link to that day in the calendar.
  */
 export function TimeStrip({
@@ -28,7 +28,7 @@ export function TimeStrip({
   timeline: TimelineDay[];
   upcoming: PlanDay[];
 }) {
-  const past = timeline.filter(t => t.date < today).slice(-6);
+  const past = timeline.filter(t => t.date < today).slice(-7);
   const todayDone = timeline.find(t => t.date === today)?.types ?? [];
   const todayPlan = upcoming.find(u => u.date === today);
   const future = [1, 2, 3].map(i => {
@@ -38,7 +38,7 @@ export function TimeStrip({
 
   return (
     <div>
-      <div className="grid grid-cols-10 gap-1">
+      <div className="grid grid-cols-11 items-start gap-0.5 sm:gap-1">
         {past.map(t => (
           <Link key={t.date} href={`/history?d=${t.date}`} className="press flex flex-col items-center gap-1">
             <DayHead d={t.date} />
@@ -56,7 +56,14 @@ export function TimeStrip({
         {future.map(u => (
           <div key={u.date} className="flex flex-col items-center gap-1 opacity-80">
             <DayHead d={u.date} />
-            <PlanCell type={u.type} vb={u.maybeVolleyball} />
+            <PlanCell type={u.type} />
+            {u.maybeVolleyball && (
+              <span className="text-center text-[9px] leading-tight" style={{ color: TYPE_COLOR.volleyball }}>
+                可能
+                <br />
+                打球
+              </span>
+            )}
           </div>
         ))}
       </div>
@@ -109,7 +116,7 @@ function Cell({ types, ring }: { types: SessionType[]; ring?: boolean }) {
   );
 }
 
-function PlanCell({ type, vb, ring }: { type: SessionType | "rest"; vb?: boolean; ring?: boolean }) {
+function PlanCell({ type, ring }: { type: SessionType | "rest"; ring?: boolean }) {
   const rest = type === "rest";
   return (
     <div
@@ -120,11 +127,6 @@ function PlanCell({ type, vb, ring }: { type: SessionType | "rest"; vb?: boolean
       style={{ borderColor: rest ? "#30353d" : TYPE_COLOR[type], color: rest ? "#8a9099" : TYPE_COLOR[type] }}
     >
       {TYPE_SHORT[type]}
-      {vb && (
-        <span className="absolute -bottom-0.5 text-[9px] font-normal" style={{ color: TYPE_COLOR.volleyball }}>
-          球?
-        </span>
-      )}
     </div>
   );
 }

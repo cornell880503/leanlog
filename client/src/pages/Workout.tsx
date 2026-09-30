@@ -18,7 +18,7 @@ import { useDraft, type WorkoutDraft } from "@/lib/draft";
 import { dateLabel, mdw, todayLocal, uid, usePastDateParam } from "@/lib/format";
 import { useExerciseLibrary } from "@/lib/library";
 import { TYPE_LABEL } from "@/lib/theme";
-import { trpc } from "@/lib/trpc";
+import { trpc, type RouterOutputs } from "@/lib/trpc";
 import { setVolume, type PrRecord, type SessionSummary } from "@shared/analytics";
 import type { SessionType } from "@shared/exercises";
 import { CalendarDays, Trash2 } from "lucide-react";
@@ -28,6 +28,17 @@ import { toast } from "sonner";
 import { Link, useLocation } from "wouter";
 
 const WORKOUT_TYPES = ["leg", "back", "chest", "other"] as const;
+
+type Ctx = RouterOutputs["training"]["context"];
+
+/** Exercises and sets pre-filled from the template in a workout context. */
+function templateExercises(c: Ctx): WorkoutDraft["exercises"] {
+  return (c.template?.exercises ?? []).map(e => ({
+    id: uid(),
+    exerciseKey: e.exerciseKey,
+    sets: e.sets.map(s => ({ id: uid(), weightKg: s.weightKg, reps: s.reps, rpe: s.rpe, isWarmup: s.isWarmup, done: false })),
+  }));
+}
 
 function autoDuration(startedAt: number): number {
   const min = Math.round((Date.now() - startedAt) / 60000 / 5) * 5;
@@ -64,11 +75,7 @@ export default function Workout({ params }: { params: { type: string } }) {
   useEffect(() => {
     if (!type || draft || result || !context.data) return;
     const c = context.data;
-    const exercises = (c.template?.exercises ?? []).map(e => ({
-      id: uid(),
-      exerciseKey: e.exerciseKey,
-      sets: e.sets.map(s => ({ id: uid(), weightKg: s.weightKg, reps: s.reps, rpe: s.rpe, isWarmup: s.isWarmup, done: false })),
-    }));
+    const exercises = templateExercises(c);
     const next: WorkoutDraft = {
       clientId: uid(),
       type,
@@ -84,6 +91,45 @@ export default function Workout({ params }: { params: { type: string } }) {
   }, [type, draft, result, context.data, setDraft]);
 
   const create = trpc.training.create.useMutation();
+  const [rebasing, setRebasing] = useState(false);
+
+  /**
+   * Move the draft to another date and reload everything that depends on it
+   * ("last time", bodyweight, strength hints) as of that date. The exercise list
+   * is replaced by that date's template only when nothing has been ticked yet
+   * and the caller allows it.
+   */
+  const rebaseDate = async (d: string, opts: { keepExercises: boolean }) => {
+    if (!draft) return;
+    setRebasing(true);
+    try {
+      const c = await utils.training.context.fetch({ type: draft.type, today: d });
+      const anyDone = draft.exercises.some(e => e.sets.some(st => st.done));
+      const replaced = !opts.keepExercises && !anyDone;
+      setDraft(x => {
+        if (!x) return x;
+        const base: WorkoutDraft = {
+          ...x,
+          date: d,
+          prev: c.lastPerf,
+          bodyweightKg: c.bodyweightKg,
+          goals: c.goals,
+          finishing: x.finishing ? { ...x.finishing, date: d } : undefined,
+        };
+        if (!replaced || x.exercises.some(e => e.sets.some(st => st.done))) return base;
+        return { ...base, exercises: templateExercises(c), templateDate: c.template?.date ?? null };
+      });
+      toast.success(
+        replaced
+          ? `已改記到 ${mdw(d)}，並帶入那天之前最近一次的動作`
+          : `已改記到 ${mdw(d)}（保留目前的動作，上次紀錄與目標改用那天之前的）`
+      );
+    } catch {
+      toast.error("讀取那天之前的紀錄失敗，日期沒有改");
+    } finally {
+      setRebasing(false);
+    }
+  };
 
   const doneCount = draft ? draft.exercises.reduce((a, e) => a + e.sets.filter(s => s.done).length, 0) : 0;
   const totalCount = draft ? draft.exercises.reduce((a, e) => a + e.sets.length, 0) : 0;
@@ -238,13 +284,8 @@ export default function Workout({ params }: { params: { type: string } }) {
             <button
               type="button"
               className="press h-12 rounded-lg border border-line font-semibold"
-              onClick={() =>
-                setDraft({
-                  ...draft,
-                  date: dateParam,
-                  finishing: draft.finishing ? { ...draft.finishing, date: dateParam } : undefined,
-                })
-              }
+              disabled={rebasing}
+              onClick={() => void rebaseDate(dateParam, { keepExercises: true })}
             >
               把進行中的改記到 {mdw(dateParam)}
             </button>
@@ -309,11 +350,8 @@ export default function Workout({ params }: { params: { type: string } }) {
           <RecordDateBar
             date={recordDate}
             today={today}
-            onChange={d =>
-              setDraft(x =>
-                x ? { ...x, date: d, finishing: x.finishing ? { ...x.finishing, date: d } : undefined } : x
-              )
-            }
+            busy={rebasing}
+            onChange={d => void rebaseDate(d, { keepExercises: false })}
           />
           <p className="mb-3 text-sm text-dim">
             {draft.templateDate
@@ -346,13 +384,12 @@ export default function Workout({ params }: { params: { type: string } }) {
                 durationMin={finishing.durationMin}
                 srpe={finishing.srpe}
                 notes={finishing.notes}
-                onChange={patch =>
-                  setDraft(d =>
-                    d && d.finishing
-                      ? { ...d, ...(patch.date ? { date: patch.date } : {}), finishing: { ...d.finishing, ...patch } }
-                      : d
-                  )
-                }
+                onChange={patch => {
+                  const { date: newDate, ...rest } = patch;
+                  if (Object.keys(rest).length)
+                    setDraft(d => (d && d.finishing ? { ...d, finishing: { ...d.finishing, ...rest } } : d));
+                  if (newDate && newDate !== draft.finishing?.date) void rebaseDate(newDate, { keepExercises: true });
+                }}
               />
               {doneCount < totalCount && (
                 <label className="flex items-center justify-between gap-3 rounded-lg bg-surface-2 p-3">
@@ -402,7 +439,17 @@ export default function Workout({ params }: { params: { type: string } }) {
 
 
 /** Which day this workout is recorded for; tap to change (today or earlier). */
-function RecordDateBar({ date, today, onChange }: { date: string; today: string; onChange: (d: string) => void }) {
+function RecordDateBar({
+  date,
+  today,
+  busy,
+  onChange,
+}: {
+  date: string;
+  today: string;
+  busy: boolean;
+  onChange: (d: string) => void;
+}) {
   const back = date !== today;
   return (
     <label
@@ -416,9 +463,10 @@ function RecordDateBar({ date, today, onChange }: { date: string; today: string;
         記錄日期：<span className="font-semibold">{mdw(date)}</span>
         {back ? `・補記（${dateLabel(date, today)}）` : "・今天"}
       </span>
-      <span className="text-xs text-dim">點此修改</span>
+      <span className="text-xs text-dim">{busy ? "更新中…" : "點此修改"}</span>
       <input
         type="date"
+        disabled={busy}
         aria-label="記錄日期"
         className="absolute inset-0 h-full w-full opacity-0"
         value={date}

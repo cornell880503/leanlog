@@ -181,9 +181,12 @@ export function strengthGoal(
   const sorted = [...milestones].sort((a, b) => a.by.localeCompare(b.by));
   const finalBy = sorted.length ? sorted[sorted.length - 1].by : null;
 
-  const reachedOn = (kg: number): string | null => history.find(p => p.e1rm >= kg - 1e-9)?.date ?? null;
+  // A step is met only if reached on or before its deadline; reaching it later
+  // still leaves it "missed" (the deadline was not kept).
+  const reachedBy = (kg: number, by: string): string | null =>
+    history.find(p => p.date <= by && p.e1rm >= kg - 1e-9)?.date ?? null;
   const statusFor = (kg: number, by: string): { status: StepStatus; metOn: string | null } => {
-    const metOn = reachedOn(kg);
+    const metOn = reachedBy(kg, by);
     if (metOn) return { status: "met", metOn };
     return { status: today > by ? "missed" : "pending", metOn: null };
   };
@@ -209,7 +212,10 @@ export function strengthGoal(
   }
 
   const achieved = current != null && current.e1rm >= targetKg - 1e-9;
-  const next = achieved ? null : (steps.find(s => s.status !== "met") ?? null);
+  // Next = the first step not met that the current e1RM hasn't already passed.
+  const next = achieved
+    ? null
+    : (steps.find(s => s.status !== "met" && !(current && current.e1rm >= s.kg - 1e-9)) ?? null);
   const from = current?.e1rm ?? last?.e1rm ?? null;
   let perWeekKg: number | null = null;
   if (from != null && !achieved && finalBy && finalBy > today) {

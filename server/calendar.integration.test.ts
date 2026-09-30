@@ -67,7 +67,7 @@ describe.skipIf(!hasDb)("calendar range and strength targets against the real da
     const a = caller(USER_A);
     await a.training.create(benchWorkout("cal-itest-a1", "2026-09-01", 50));
     await a.training.create(benchWorkout("cal-itest-a2", "2026-09-20", 55));
-    await a.training.create(benchWorkout("cal-itest-a3", "2026-10-02", 57.5));
+    await a.training.create(benchWorkout("cal-itest-a3", "2026-09-10", 45));
     await a.body.saveWeight({ date: "2026-09-20", weightKg: 70.4, fasted: true });
     await a.body.createJump({ date: "2026-09-21", approachReachCm: 306, standingReachCm: null, notes: null });
 
@@ -106,15 +106,15 @@ describe.skipIf(!hasDb)("calendar range and strength targets against the real da
     expect(summary.strengthGoals).toHaveLength(1);
     const g = summary.strengthGoals[0];
     expect(g.exerciseKey).toBe("bench_press");
-    // Latest weight 70.4 × 1.2 = 84.5 → nearest 2.5 = 85; the 10/02 session is after "today".
+    // Latest weight 70.4 × 1.2 = 84.5 → nearest 2.5 = 85; best recent e1RM is the 9/20 session.
     expect(g.targetKg).toBe(85);
     expect(g.currentE1rm).toBeCloseTo(64.2, 1);
     expect(summary.upcoming).toHaveLength(7);
     expect(summary.timeline).toHaveLength(14);
     expect(summary.suggestion.basis?.lastDate).toBe("2026-09-20");
 
-    // Back-filling 09/10: "last time" is the 09/01 session, not the later ones.
-    const ctx = await a.training.context({ type: "chest", today: "2026-09-10" });
+    // Back-filling 09/05: "last time" is the 09/01 session, not the later ones.
+    const ctx = await a.training.context({ type: "chest", today: "2026-09-05" });
     expect(ctx.template?.date).toBe("2026-09-01");
     expect(ctx.goals.bench_press.targetKg).toBeGreaterThan(0);
 
@@ -125,5 +125,30 @@ describe.skipIf(!hasDb)("calendar range and strength targets against the real da
     const db = await requireDb();
     const rows = await db.select().from(sessions).where(eq(sessions.userId, USER_A));
     expect(rows).toHaveLength(3);
+  }, 60_000);
+
+  it("rejects future or impossible record dates and invalid strength-target lifts", async () => {
+    const a = caller(USER_A);
+    const future = new Date(Date.now() + 3 * 86_400_000).toISOString().slice(0, 10);
+    await expect(a.training.create(benchWorkout("cal-itest-future", future, 50))).rejects.toThrow(/未來/);
+    await expect(a.training.create(benchWorkout("cal-itest-bad", "2026-02-30", 50))).rejects.toThrow(/不存在/);
+    await expect(a.body.saveWeight({ date: future, weightKg: 70, fasted: true })).rejects.toThrow(/未來/);
+    await expect(
+      a.body.createJump({ date: future, approachReachCm: 300, standingReachCm: null, notes: null })
+    ).rejects.toThrow(/未來/);
+    // Yesterday (UTC) is always accepted.
+    const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
+    await a.body.saveWeight({ date: yesterday, weightKg: 70.1, fasted: true });
+
+    await expect(
+      a.settings.update({ settings: { strengthTargets: [{ exerciseKey: "no_such_lift", ratio: 1 }] } })
+    ).rejects.toThrow(/不存在或已封存/);
+    await expect(
+      a.settings.update({ settings: { strengthTargets: [{ exerciseKey: "plank", ratio: 1 }] } })
+    ).rejects.toThrow(/不存在或已封存/);
+    const ok = await a.settings.update({
+      settings: { strengthTargets: [{ exerciseKey: "back_squat", ratio: 1.5 }] },
+    });
+    expect(ok.settings.strengthTargets).toEqual([{ exerciseKey: "back_squat", ratio: 1.5 }]);
   }, 60_000);
 });

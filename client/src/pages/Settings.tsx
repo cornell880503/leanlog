@@ -67,6 +67,7 @@ export default function Settings() {
     if (q.data && !dirty) setForm(toForm(q.data));
   }, [q.data, dirty]);
 
+  const lib = useExerciseLibrary();
   const save = trpc.settings.update.useMutation({
     onSuccess: data => {
       utils.settings.get.setData(undefined, data);
@@ -89,6 +90,12 @@ export default function Settings() {
       toast.error("輪替裡至少要有一個訓練日");
       return;
     }
+    // Drop lifts that no longer exist or were archived (the server rejects them).
+    const strengthTargets = form.strengthTargets.filter(t => {
+      const def = lib.lookup(t.exerciseKey);
+      return !!def && !def.archived && def.unit !== "sec" && def.category !== "plyo" && def.category !== "power";
+    });
+    if (strengthTargets.length !== form.strengthTargets.length) toast.message("已移除不存在或已封存的力量目標動作");
     save.mutate({
       standingReachCm: form.standingReachCm,
       standingReachEstimated: form.standingReachEstimated,
@@ -101,7 +108,7 @@ export default function Settings() {
         weeklySetTargets: form.weeklySetTargets,
         rotation: form.rotation,
         dumbbellStep: form.dumbbellStep as 1 | 2 | 2.5,
-        strengthTargets: form.strengthTargets,
+        strengthTargets,
       },
     });
   };

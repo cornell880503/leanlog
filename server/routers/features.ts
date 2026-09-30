@@ -41,6 +41,15 @@ import {
 } from "../data/sessions";
 
 const dateStr = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "日期格式錯誤");
+
+/** Latest date a record may carry: the server's UTC date + 1, so every time zone's "today" passes. */
+function latestRecordDate(): string {
+  return new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
+}
+/** A real calendar date (no 02-30) that is not in the future. Used for everything the user records. */
+const recordDate = dateStr
+  .refine(d => new Date(`${d}T00:00:00Z`).toISOString().slice(0, 10) === d, "日期不存在")
+  .refine(d => d <= latestRecordDate(), "不能記錄未來的日期");
 const sessionType = z.enum(["leg", "back", "chest", "volleyball", "other"]);
 
 const setSchema = z.object({
@@ -54,7 +63,7 @@ const setSchema = z.object({
 });
 
 const sessionPayload = z.object({
-  date: dateStr,
+  date: recordDate,
   type: sessionType,
   startedAt: z.number().int().nullable().default(null),
   endedAt: z.number().int().nullable().default(null),
@@ -70,7 +79,7 @@ const sessionPayload = z.object({
 const nullableNum = z.number().min(0).max(2000).nullable();
 
 const scanPayload = z.object({
-  date: dateStr,
+  date: recordDate,
   time: z.string().max(8).nullable(),
   location: z.string().max(128).nullable(),
   weightKg: z.number().min(30).max(250),
@@ -222,7 +231,7 @@ export const bodyRouter = router({
     return listWeights(db, ctx.user.id, 400);
   }),
   saveWeight: protectedProcedure
-    .input(z.object({ date: dateStr, weightKg: z.number().min(30).max(250), fasted: z.boolean() }))
+    .input(z.object({ date: recordDate, weightKg: z.number().min(30).max(250), fasted: z.boolean() }))
     .mutation(async ({ ctx, input }) => {
       const db = await requireDb();
       await upsertWeight(db, ctx.user.id, input.date, Math.round(input.weightKg * 10) / 10, input.fasted);
@@ -259,7 +268,7 @@ export const bodyRouter = router({
   createJump: protectedProcedure
     .input(
       z.object({
-        date: dateStr,
+        date: recordDate,
         approachReachCm: z.number().min(150).max(420),
         standingReachCm: z.number().min(150).max(300).nullable(),
         notes: z.string().max(300).nullable(),
@@ -310,6 +319,18 @@ export const settingsRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const db = await requireDb();
+      const targets = input.settings?.strengthTargets;
+      if (targets && input.settings) {
+        // Only lifts that exist for this user, are not archived, and are rep-based loads.
+        const { lookup } = await buildLookup(db, ctx.user.id);
+        const valid = targets.filter(t => {
+          const def = lookup(t.exerciseKey);
+          return !!def && !def.archived && def.unit !== "sec" && def.category !== "plyo" && def.category !== "power";
+        });
+        if (valid.length !== targets.length) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "力量目標裡有不存在或已封存的動作，請重新選擇" });
+        }
+      }
       return updateSettings(db, ctx.user.id, input);
     }),
 });
