@@ -115,6 +115,8 @@ function HowTo() {
           [<GoTo href="/body">身體：記體重</GoTo>, "越常越好", "7 日平均趨勢，判斷吃得夠不夠"],
           [<GoTo href="/body">身體：輸入掃描</GoTo>, "每 4 週", "身體組成地圖、里程碑進度"],
           [<GoTo href="/body">身體：摸高測試</GoTo>, "每 2–4 週", "摸高進度、推估跳躍高度"],
+          [<GoTo href="/history">日曆：點任何一天</GoTo>, "想看就看", "月曆／週曆看哪天練了什麼；忘了記的可以直接補記那天"],
+          [<GoTo href="/progress">進度：力量目標</GoTo>, "每次練完", "每個主項目前幾公斤、目標幾公斤、下一步要做到幾公斤幾下"],
           ["跟 Manus 說「週報」", "每週一次", "匯出資料跑完整分析，給調整建議"],
         ]}
       />
@@ -269,6 +271,30 @@ function Goals({ s }: { s: Summary }) {
           </span>,
         ])}
       />
+
+      <h3 className="pt-2 font-semibold">力量目標（每次訓練都看得到進度）</h3>
+      <p>
+        體組成要等掃描才知道，力量每次練完就知道。下面的目標是以體重的倍數設定（目前體重{" "}
+        {s.strengthGoals[0] ? `${fmt(s.strengthGoals[0].bodyweightKg)} kg` : "—"}），數字是 e1RM：用「重量×次數」推估的單次最大重量。引體向上含體重。
+      </p>
+      {s.strengthGoals.length ? (
+        <Table
+          head={["動作", "現在", "目標", "大約等於"]}
+          numCols={[1, 2]}
+          rows={s.strengthGoals.map(g => [
+            g.name,
+            g.currentE1rm != null ? fmt(g.currentE1rm) : "—",
+            `${fmt(g.targetKg)}（${fmt(g.ratio, 2)}×）`,
+            g.achieved ? <span className="font-semibold text-brand">已達標</span> : g.targetSet.label,
+          ])}
+        />
+      ) : (
+        <p className="text-dim">還沒有設定力量目標。</p>
+      )}
+      <p className="text-dim">
+        倍數的由來：薄肌、會跳的業餘運動員常見的「夠用」水準，大約蹲舉 1.5 倍、硬舉 1.75 倍、臥推 1 倍、肩推 0.65 倍體重、引體可以徒手 12 下。再往上的邊際效益（對外觀與跳躍）變小，恢復成本變大。階段目標與下一步建議的組數在「進度」頁。
+      </p>
+      <GoTo href="/progress">看力量目標與下一步</GoTo>
 
       <h3 className="pt-2 font-semibold">助跑摸高 {j.targetReachCm} cm</h3>
       <p>

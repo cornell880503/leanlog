@@ -2,7 +2,7 @@ import { startLogin } from "@/const";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { LOGO_URL } from "@/lib/theme";
-import { BookOpen, ChevronLeft, History, Home, LineChart, Scale, Settings } from "lucide-react";
+import { BookOpen, CalendarDays, ChevronLeft, Home, LineChart, Scale, Settings } from "lucide-react";
 import type { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 
@@ -10,7 +10,7 @@ const TABS = [
   { href: "/", label: "今天", icon: Home },
   { href: "/body", label: "身體", icon: Scale },
   { href: "/progress", label: "進度", icon: LineChart },
-  { href: "/history", label: "歷史", icon: History },
+  { href: "/history", label: "日曆", icon: CalendarDays },
   { href: "/guide", label: "手冊", icon: BookOpen },
 ];
 

@@ -7,7 +7,8 @@ import {
   DAY_TYPES,
   EQUIPMENT_LABEL,
 } from "../../shared/exercises";
-import { findPrs, summarizeSession, bodyweightOn, setE1rm } from "../../shared/analytics";
+import { findPrs, summarizeSession, bodyweightOn, setE1rm, daysBetween } from "../../shared/analytics";
+import { MAX_STRENGTH_TARGETS } from "../../shared/settings";
 import { buildLookup, requireDb } from "../data/common";
 import {
   createCustomExercise,
@@ -23,6 +24,7 @@ import {
   upsertWeight,
 } from "../data/body";
 import { dashboardSummary, strengthTrend } from "../data/dashboard";
+import { MAX_CALENDAR_DAYS, calendarRange } from "../data/calendar";
 import { buildExport } from "../data/export";
 import { ensureSettings, updateSettings } from "../data/settings";
 import {
@@ -106,7 +108,8 @@ export const trainingRouter = router({
     .query(async ({ ctx, input }) => {
       const db = await requireDb();
       const { lookup } = await buildLookup(db, ctx.user.id);
-      return workoutContext(db, ctx.user.id, input.type, lookup, input.today);
+      const settings = (await ensureSettings(db, ctx.user.id)).settings;
+      return workoutContext(db, ctx.user.id, input.type, lookup, input.today, settings);
     }),
 
   create: protectedProcedure
@@ -275,6 +278,9 @@ export const bodyRouter = router({
 });
 
 const weeklyTargetsSchema = z.record(z.string(), z.tuple([z.number().min(0).max(40), z.number().min(0).max(40)]));
+const strengthTargetsSchema = z
+  .array(z.object({ exerciseKey: z.string().min(1).max(64), ratio: z.number().min(0.2).max(3) }))
+  .max(MAX_STRENGTH_TARGETS);
 
 export const settingsRouter = router({
   get: protectedProcedure.query(async ({ ctx }) => {
@@ -296,6 +302,7 @@ export const settingsRouter = router({
             weeklySetTargets: weeklyTargetsSchema,
             rotation: z.array(z.enum(["leg", "back", "chest", "rest"])).min(1).max(10),
             dumbbellStep: z.union([z.literal(1), z.literal(2), z.literal(2.5)]),
+            strengthTargets: strengthTargetsSchema,
           })
           .partial()
           .optional(),
@@ -319,6 +326,22 @@ export const dashboardRouter = router({
       const db = await requireDb();
       const { lookup } = await buildLookup(db, ctx.user.id);
       return strengthTrend(db, ctx.user.id, lookup, input.exerciseKey);
+    }),
+});
+
+export const calendarRouter = router({
+  range: protectedProcedure
+    .input(
+      z
+        .object({ from: dateStr, to: dateStr })
+        .refine(v => v.from <= v.to, { message: "開始日期不能晚於結束日期" })
+        .refine(v => daysBetween(v.from, v.to) < MAX_CALENDAR_DAYS, { message: `一次最多查 ${MAX_CALENDAR_DAYS} 天` })
+    )
+    .query(async ({ ctx, input }) => {
+      const db = await requireDb();
+      const { lookup } = await buildLookup(db, ctx.user.id);
+      const settings = (await ensureSettings(db, ctx.user.id)).settings;
+      return calendarRange(db, ctx.user.id, lookup, settings.hardSetRpeMin, input.from, input.to);
     }),
 });
 

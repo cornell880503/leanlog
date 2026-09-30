@@ -7,6 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { DraftExercise, DraftSet, PrevPerf } from "@/lib/draft";
+import type { GoalHint } from "@shared/strength";
 import { fmt, shortDate, uid } from "@/lib/format";
 import { TYPE_COLOR } from "@/lib/theme";
 import { cn } from "@/lib/utils";
@@ -19,7 +20,7 @@ import {
   type ExerciseDef,
   type SessionType,
 } from "@shared/exercises";
-import { ArrowDown, ArrowUp, Check, MoreHorizontal, Repeat, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, MoreHorizontal, Repeat, Target, Trash2 } from "lucide-react";
 import { useMemo } from "react";
 
 const RPES = [6, 7, 8, 9, 10];
@@ -46,6 +47,7 @@ export function ExerciseCard({
   ex,
   item,
   prev,
+  goal,
   type,
   bodyweightKg,
   dumbbellStep,
@@ -59,6 +61,7 @@ export function ExerciseCard({
   ex: ExerciseDef | undefined;
   item: DraftExercise;
   prev?: PrevPerf;
+  goal?: GoalHint;
   type: SessionType;
   bodyweightKg: number;
   dumbbellStep: number;
@@ -163,6 +166,24 @@ export function ExerciseCard({
             </div>
           ) : (
             <div className="mt-1 text-xs text-dim">第一次做這個動作</div>
+          )}
+          {goal && (
+            <div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-xs">
+              <Target className="size-3.5 text-brand" />
+              {goal.achieved ? (
+                <span className="text-brand">力量目標 {fmt(goal.targetKg)} 已達標</span>
+              ) : (
+                <>
+                  <span className="text-dim">目標 e1RM {fmt(goal.targetKg)}</span>
+                  {goal.nextSet && (
+                    <span>
+                      ・下一步{goal.nextName ? ` ${goal.nextName}` : ""}
+                      <span className="num ml-1 text-sm font-semibold text-brand">{goal.nextSet}</span>
+                    </span>
+                  )}
+                </>
+              )}
+            </div>
           )}
         </div>
         <DropdownMenu>

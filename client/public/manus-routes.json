@@ -1,13 +1,40 @@
 {
   "routes": [
-    { "path": "/", "title": "今天" },
-    { "path": "/workout/:type", "title": "重訓記錄" },
-    { "path": "/volleyball", "title": "排球記錄" },
-    { "path": "/body", "title": "身體" },
-    { "path": "/progress", "title": "進度" },
-    { "path": "/history", "title": "歷史" },
-    { "path": "/history/:id", "title": "訓練詳細" },
-    { "path": "/settings", "title": "設定" },
-    { "path": "/guide", "title": "手冊" }
+    {
+      "path": "/",
+      "title": "今天"
+    },
+    {
+      "path": "/workout/:type",
+      "title": "重訓記錄"
+    },
+    {
+      "path": "/volleyball",
+      "title": "排球記錄"
+    },
+    {
+      "path": "/body",
+      "title": "身體"
+    },
+    {
+      "path": "/progress",
+      "title": "進度"
+    },
+    {
+      "path": "/history",
+      "title": "日曆"
+    },
+    {
+      "path": "/history/:id",
+      "title": "訓練詳細"
+    },
+    {
+      "path": "/settings",
+      "title": "設定"
+    },
+    {
+      "path": "/guide",
+      "title": "手冊"
+    }
   ]
 }

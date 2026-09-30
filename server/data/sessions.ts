@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, asc, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, between, desc, eq, inArray } from "drizzle-orm";
 import {
   bodyScans,
   bodyWeights,
@@ -18,6 +18,8 @@ import {
   type WeightPoint,
 } from "../../shared/analytics";
 import type { SessionType } from "../../shared/exercises";
+import type { Settings } from "../../shared/settings";
+import { goalHints, strengthGoals, type GoalHint } from "../../shared/strength";
 import type { Db } from "./common";
 
 export const FALLBACK_BW = 70;
@@ -242,6 +244,34 @@ export async function listSessions(
   if (!top.length) return [];
   const ids = top.map(t => t.id);
   const rows = await db.select().from(sessions).where(and(eq(sessions.userId, userId), inArray(sessions.id, ids)));
+  return toListItems(db, userId, rows, lookup, rpeMin);
+}
+
+/** Sessions dated from..to (inclusive), newest first. */
+export async function listSessionsInRange(
+  db: Db,
+  userId: number,
+  lookup: Lookup,
+  rpeMin: number,
+  from: string,
+  to: string
+): Promise<SessionListItem[]> {
+  const rows = await db
+    .select()
+    .from(sessions)
+    .where(and(eq(sessions.userId, userId), between(sessions.date, from, to)));
+  return toListItems(db, userId, rows, lookup, rpeMin);
+}
+
+async function toListItems(
+  db: Db,
+  userId: number,
+  rows: SessionRow[],
+  lookup: Lookup,
+  rpeMin: number
+): Promise<SessionListItem[]> {
+  if (!rows.length) return [];
+  const ids = rows.map(r => r.id);
   const sets = await db
     .select()
     .from(workoutSets)
@@ -279,6 +309,8 @@ export interface WorkoutContext {
   template: { date: string; exercises: { exerciseKey: string; sets: LastPerformance["sets"] }[] } | null;
   lastPerf: Record<string, LastPerformance>;
   bodyweightKg: number;
+  /** Strength-target hints keyed by exercise (only exercises that have a target). */
+  goals: Record<string, GoalHint>;
 }
 
 /** Data needed to pre-fill a new workout of the given type. */
@@ -287,9 +319,12 @@ export async function workoutContext(
   userId: number,
   type: SessionType,
   lookup: Lookup,
-  today: string
+  today: string,
+  settings: Settings
 ): Promise<WorkoutContext> {
-  const all = await loadAllSessions(db, userId);
+  // "today" is the date being recorded (a past date when back-filling), so only
+  // sessions on or before it count as "last time".
+  const all = (await loadAllSessions(db, userId)).filter(s => s.date <= today);
   const weights = await loadWeightPoints(db, userId);
   const bodyweightKg = bodyweightOn(weights, today, FALLBACK_BW);
   const lastOfType = [...all].reverse().find(s => s.type === type && s.sets.length > 0) ?? null;
@@ -333,5 +368,17 @@ export async function workoutContext(
       };
     }
   }
-  return { template, lastPerf, bodyweightKg };
+  const goals = goalHints(
+    strengthGoals({
+      targets: settings.strengthTargets,
+      milestones: settings.milestones,
+      dumbbellStep: settings.dumbbellStep,
+      sessions: all.map(toSessionInput),
+      weights,
+      lookup,
+      today,
+      fallbackBw: FALLBACK_BW,
+    })
+  );
+  return { template, lastPerf, bodyweightKg, goals };
 }

@@ -18,4 +18,14 @@ export const TYPE_LABEL: Record<SessionType | "rest", string> = {
   rest: "休息",
 };
 
+/** One-character labels for calendar cells and the timeline strip. */
+export const TYPE_SHORT: Record<SessionType | "rest", string> = {
+  leg: "腿",
+  back: "背",
+  chest: "胸",
+  volleyball: "球",
+  other: "他",
+  rest: "休",
+};
+
 export const LOGO_URL = "/logo-192.png";

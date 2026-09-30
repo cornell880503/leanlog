@@ -1,7 +1,7 @@
 import { AppShell } from "@/components/app/AppShell";
 import { Card, Chips } from "@/components/app/controls";
 import { DateChips } from "@/components/workout/SessionMeta";
-import { todayLocal, uid } from "@/lib/format";
+import { todayLocal, uid, usePastDateParam } from "@/lib/format";
 import { trpc } from "@/lib/trpc";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -84,8 +84,9 @@ export default function Volleyball() {
   const [, navigate] = useLocation();
   const utils = trpc.useUtils();
   const [clientId] = useState(() => uid());
+  const dateParam = usePastDateParam();
   const [v, setV] = useState<VolleyballValues>({
-    date: todayLocal(),
+    date: dateParam ?? todayLocal(),
     vbKind: "練習",
     durationMin: 120,
     srpe: 6,
@@ -96,6 +97,7 @@ export default function Volleyball() {
     onSuccess: () => {
       toast.success("排球已記錄");
       void utils.dashboard.summary.invalidate();
+      void utils.calendar.range.invalidate();
       void utils.training.list.invalidate();
       navigate("/");
     },

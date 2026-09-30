@@ -494,12 +494,26 @@ export interface SuggestionSession {
   type: SessionType;
 }
 
+/** Why the suggestion came out this way, so the UI can explain it. */
+export interface SuggestionBasis {
+  /** Date and type of the most recent strength session on or before today. */
+  lastDate: string;
+  lastType: StrengthDay;
+  /** Rest days actually taken since then (days with no strength or volleyball). */
+  restTaken: number;
+  /** Rest days the rotation asks for (+1 per volleyball session in between). */
+  restNeeded: number;
+  /** Volleyball sessions between the last strength session and today. */
+  vbCount: number;
+}
+
 export interface Suggestion {
   type: StrengthDay | "rest";
   reason: string;
   doneToday: SessionType[];
   nextStrength: StrengthDay;
   legWarning: boolean;
+  basis: SuggestionBasis | null;
 }
 
 /** Friday or Saturday: volleyball usually happens on the weekend. */
@@ -540,12 +554,33 @@ export function suggestToday(
     }
   }
 
+  let basis: SuggestionBasis | null = null;
+  let restTaken = 0;
+  let vbCount = 0;
+  let need = requiredRest;
+  if (lastStrength) {
+    const between = past.filter(s => s.date > lastStrength.date && s.date < today);
+    vbCount = new Set(between.filter(s => s.type === "volleyball").map(s => s.date)).size;
+    const busyDays = new Set(between.filter(s => s.type === "volleyball" || isStrength(s.type)).map(s => s.date));
+    const gap = Math.max(0, daysBetween(lastStrength.date, today) - 1);
+    restTaken = Math.max(0, gap - busyDays.size);
+    need = requiredRest + vbCount;
+    basis = {
+      lastDate: lastStrength.date,
+      lastType: lastStrength.type as StrengthDay,
+      restTaken,
+      restNeeded: need,
+      vbCount,
+    };
+  }
+
   const build = (type: StrengthDay | "rest", reason: string): Suggestion => ({
     type,
     reason,
     doneToday,
     nextStrength,
     legWarning: type === "leg" && isLegWarningDay(today),
+    basis,
   });
 
   const doneStrength = doneToday.find(isStrength);
@@ -553,17 +588,60 @@ export function suggestToday(
   if (doneToday.includes("volleyball")) return build("rest", "今天打過球了，好好恢復");
   if (!lastStrength) return build(nextStrength, "從循環的第一天開始");
 
-  const between = past.filter(s => s.date > lastStrength.date && s.date < today);
-  const vbCount = new Set(between.filter(s => s.type === "volleyball").map(s => s.date)).size;
-  const busyDays = new Set(between.filter(s => s.type === "volleyball" || isStrength(s.type)).map(s => s.date));
-  const gap = daysBetween(lastStrength.date, today) - 1;
-  const restTaken = Math.max(0, gap - busyDays.size);
-  const need = requiredRest + vbCount;
   if (restTaken < need) {
     const reason = vbCount > 0 && restTaken >= requiredRest ? "打完球多休一天" : "循環的休息日";
     return build("rest", reason);
   }
   return build(nextStrength, "照循環輪到這一天");
+}
+
+// ───────────────────────── timeline & projected plan ─────────────────────────
+
+export interface PlanDay {
+  date: string;
+  type: StrengthDay | "rest";
+  /** Weekend days: volleyball usually happens then, which would add a rest day. */
+  maybeVolleyball: boolean;
+}
+
+/**
+ * Simulate the next `days` days (starting today) assuming each suggestion is
+ * followed. Volleyball is not predicted; weekend days are only flagged.
+ */
+export function projectPlan(
+  sessions: SuggestionSession[],
+  today: string,
+  rotation: RotationItem[],
+  days: number
+): PlanDay[] {
+  const sim: SuggestionSession[] = sessions.filter(s => s.date <= today).map(s => ({ date: s.date, type: s.type }));
+  const out: PlanDay[] = [];
+  for (let i = 0; i < days; i++) {
+    const d = addDays(today, i);
+    const sug = suggestToday(sim, d, rotation);
+    const wd = weekday(d);
+    out.push({ date: d, type: sug.type, maybeVolleyball: wd === 0 || wd === 6 });
+    if (sug.type !== "rest") sim.push({ date: d, type: sug.type });
+  }
+  return out;
+}
+
+export interface TimelineDay {
+  date: string;
+  /** Session types done that day, in recording order, without duplicates. */
+  types: SessionType[];
+}
+
+/** What was done on each of the `days` days ending today (oldest first). */
+export function timeline(sessions: SuggestionSession[], today: string, days: number): TimelineDay[] {
+  const out: TimelineDay[] = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const d = addDays(today, -i);
+    const types: SessionType[] = [];
+    for (const s of sessions) if (s.date === d && !types.includes(s.type)) types.push(s.type);
+    out.push({ date: d, types });
+  }
+  return out;
 }
 
 // ───────────────────────── weight trend ─────────────────────────

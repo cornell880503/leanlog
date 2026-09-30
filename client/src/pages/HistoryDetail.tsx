@@ -48,6 +48,7 @@ export default function HistoryDetail({ params }: { params: { id: string } }) {
     void utils.training.list.invalidate();
     void utils.training.get.invalidate({ id });
     void utils.dashboard.summary.invalidate();
+    void utils.calendar.range.invalidate();
     void utils.training.context.invalidate();
   };
   const update = trpc.training.update.useMutation({
@@ -62,7 +63,7 @@ export default function HistoryDetail({ params }: { params: { id: string } }) {
     onSuccess: () => {
       toast.success("已刪除");
       invalidate();
-      navigate("/history");
+      navigate(s ? `/history?d=${s.date}` : "/history");
     },
     onError: () => toast.error("刪除失敗"),
   });

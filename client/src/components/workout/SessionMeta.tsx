@@ -3,7 +3,7 @@ import { addDays } from "@shared/analytics";
 import { dateLabel, fmt, todayLocal } from "@/lib/format";
 import { TARGET_MUSCLES } from "@shared/exercises";
 import type { PrRecord, SessionSummary } from "@shared/analytics";
-import { Trophy } from "lucide-react";
+import { CalendarDays, Trophy } from "lucide-react";
 
 export const SRPE_HINT: Record<number, string> = {
   1: "非常輕鬆",
@@ -23,7 +23,27 @@ export function DateChips({ value, onChange }: { value: string; onChange: (d: st
   const days = [today, addDays(today, -1), addDays(today, -2), addDays(today, -3)];
   const options = days.map(d => ({ value: d, label: dateLabel(d, today) }));
   if (!days.includes(value)) options.push({ value, label: dateLabel(value, today) });
-  return <Chips value={value} onChange={onChange} options={options} size="sm" />;
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <Chips value={value} onChange={onChange} options={options} size="sm" />
+      {/* Native picker: the system date wheel on phones; future dates are blocked. */}
+      <label className="press relative flex h-9 items-center gap-1 rounded-lg border border-dashed border-input px-2 text-sm text-dim">
+        <CalendarDays className="size-4" />
+        其他日期
+        <input
+          type="date"
+          aria-label="選其他日期"
+          className="absolute inset-0 h-full w-full opacity-0"
+          value={value}
+          max={today}
+          onChange={e => {
+            const v = e.target.value;
+            if (/^\d{4}-\d{2}-\d{2}$/.test(v) && v <= today) onChange(v);
+          }}
+        />
+      </label>
+    </div>
+  );
 }
 
 export function SessionMetaFields({

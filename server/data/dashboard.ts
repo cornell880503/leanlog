@@ -2,15 +2,18 @@ import {
   bodyProgress,
   bodyweightOn,
   jumpProgress,
+  projectPlan,
   round1,
   setE1rm,
   suggestToday,
+  timeline,
   weeklyStats,
   weightTrend,
   addDays,
   type Lookup,
 } from "../../shared/analytics";
 import { DAY_TYPES, type SessionType } from "../../shared/exercises";
+import { strengthGoals } from "../../shared/strength";
 import type { Db } from "./common";
 import { listJumps, listScans } from "./body";
 import { ensureSettings } from "./settings";
@@ -27,11 +30,21 @@ export async function dashboardSummary(db: Db, userId: number, lookup: Lookup, t
 
   const inputs = all.map(toSessionInput);
   const weeks = weeklyStats(inputs, lookup, bw, s, today, 8);
-  const suggestion = suggestToday(
-    all.map(x => ({ date: x.date, type: x.type as SessionType })),
+  const brief = all.map(x => ({ date: x.date, type: x.type as SessionType }));
+  const suggestion = suggestToday(brief, today, s.rotation);
+  // Today + next 6 days, assuming each suggestion is followed.
+  const upcoming = projectPlan(brief, today, s.rotation, 7);
+  const recent = timeline(brief, today, 14);
+  const goals = strengthGoals({
+    targets: s.strengthTargets,
+    milestones: s.milestones,
+    dumbbellStep: s.dumbbellStep,
+    sessions: inputs,
+    weights,
+    lookup,
     today,
-    s.rotation
-  );
+    fallbackBw: FALLBACK_BW,
+  });
 
   const counts = new Map<string, number>();
   for (const x of all) {
@@ -52,10 +65,14 @@ export async function dashboardSummary(db: Db, userId: number, lookup: Lookup, t
   const from = addDays(today, -120);
   const trend = weightTrend(weights).filter(p => p.date >= from);
   const lastStrength = [...all].reverse().find(x => (DAY_TYPES as readonly string[]).includes(x.type));
+  const lastAny = [...all].reverse().find(x => x.date <= today) ?? null;
 
   return {
     today,
     suggestion,
+    upcoming,
+    timeline: recent,
+    lastSession: lastAny ? { date: lastAny.date, type: lastAny.type as SessionType } : null,
     lastStrengthDate: lastStrength?.date ?? null,
     weeks,
     weeklyTargets: s.weeklySetTargets,
@@ -84,6 +101,7 @@ export async function dashboardSummary(db: Db, userId: number, lookup: Lookup, t
       trend,
     },
     strengthOptions,
+    strengthGoals: goals,
     sessionCount: all.length,
   };
 }

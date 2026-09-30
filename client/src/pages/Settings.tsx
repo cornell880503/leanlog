@@ -6,7 +6,15 @@ import { todayLocal } from "@/lib/format";
 import { TYPE_LABEL } from "@/lib/theme";
 import { trpc } from "@/lib/trpc";
 import { TARGET_MUSCLES } from "@shared/exercises";
-import { DEFAULT_SETTINGS, type RotationItem, type Settings as S } from "@shared/settings";
+import {
+  DEFAULT_SETTINGS,
+  DEFAULT_STRENGTH_TARGETS,
+  MAX_STRENGTH_TARGETS,
+  type RotationItem,
+  type Settings as S,
+  type StrengthTarget,
+} from "@shared/settings";
+import { useExerciseLibrary } from "@/lib/library";
 import { Copy, Download, LogOut, Plus, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -22,6 +30,7 @@ type Form = {
   weeklySetTargets: Record<string, [number, number]>;
   rotation: RotationItem[];
   dumbbellStep: number;
+  strengthTargets: StrengthTarget[];
 };
 
 const ROT_OPTIONS: { value: RotationItem; label: string }[] = [
@@ -43,6 +52,7 @@ function toForm(v: { standingReachCm: number; standingReachEstimated: boolean; s
     weeklySetTargets: v.settings.weeklySetTargets,
     rotation: v.settings.rotation,
     dumbbellStep: v.settings.dumbbellStep,
+    strengthTargets: v.settings.strengthTargets,
   };
 }
 
@@ -61,6 +71,7 @@ export default function Settings() {
     onSuccess: data => {
       utils.settings.get.setData(undefined, data);
       void utils.dashboard.summary.invalidate();
+      void utils.calendar.range.invalidate();
       setDirty(false);
       toast.success("設定已儲存");
     },
@@ -90,6 +101,7 @@ export default function Settings() {
         weeklySetTargets: form.weeklySetTargets,
         rotation: form.rotation,
         dumbbellStep: form.dumbbellStep as 1 | 2 | 2.5,
+        strengthTargets: form.strengthTargets,
       },
     });
   };
@@ -175,6 +187,7 @@ export default function Settings() {
             </p>
           </Card>
 
+          <StrengthTargetsEditor value={form.strengthTargets} onChange={strengthTargets => set({ strengthTargets })} />
           <Card>
             <CardTitle>每週有效組數目標</CardTitle>
             <ul className="space-y-2">
@@ -371,6 +384,85 @@ function ExportCard() {
           className="press flex h-12 items-center justify-center gap-2 rounded-lg border border-line font-semibold disabled:opacity-50"
         >
           <Download className="size-4" /> 下載
+        </button>
+      </div>
+    </Card>
+  );
+}
+
+const RATIO_VALUES = range(0.3, 2.5, 0.05);
+
+/** Pick lifts and their target e1RM as a multiple of bodyweight. */
+function StrengthTargetsEditor({ value, onChange }: { value: StrengthTarget[]; onChange: (v: StrengthTarget[]) => void }) {
+  const lib = useExerciseLibrary();
+  const summary = trpc.dashboard.summary.useQuery({ today: todayLocal() });
+  const bw = summary.data?.strengthGoals[0]?.bodyweightKg ?? summary.data?.weight.latest?.weightKg ?? null;
+  // Rep-based lifts that can carry load (skip timed holds and jumps).
+  const candidates = lib.all
+    .filter(e => !e.archived && e.unit !== "sec" && e.category !== "plyo" && e.category !== "power")
+    .sort((a, b) => (a.category === b.category ? 0 : a.category === "compound" ? -1 : 1));
+  const used = new Set(value.map(v => v.exerciseKey));
+  const optionsFor = (current: string) => {
+    const opts = candidates.filter(e => e.key === current || !used.has(e.key)).map(e => ({ value: e.key, label: e.name }));
+    if (!opts.some(o => o.value === current)) opts.unshift({ value: current, label: lib.lookup(current)?.name ?? "（已刪除的動作）" });
+    return opts;
+  };
+  const update = (i: number, patch: Partial<StrengthTarget>) => onChange(value.map((t, j) => (j === i ? { ...t, ...patch } : t)));
+  const add = () => {
+    const next = candidates.find(e => !used.has(e.key));
+    if (next) onChange([...value, { exerciseKey: next.key, ratio: 1 }]);
+  };
+  return (
+    <Card>
+      <div id="strength" className="scroll-mt-20" />
+      <CardTitle>力量目標</CardTitle>
+      <p className="mb-3 text-xs leading-relaxed text-dim">
+        目標＝e1RM 是體重的幾倍{bw ? `（目前體重 ${bw} kg）` : ""}。引體向上、雙槓等徒手動作的重量含體重。換週期換動作時，在這裡換成現在練的動作。
+      </p>
+      <ul className="space-y-2">
+        {value.map((t, i) => {
+          const kg = bw ? Math.round((t.ratio * bw) / 2.5) * 2.5 : null;
+          return (
+            <li key={t.exerciseKey} className="flex items-center gap-2">
+              <Pick
+                value={t.exerciseKey}
+                options={optionsFor(t.exerciseKey)}
+                onChange={k => update(i, { exerciseKey: k })}
+                className="min-w-0 flex-1 [&_span.num]:font-sans [&_span.num]:text-base [&_span.num]:text-left [&_span.num]:truncate"
+                ariaLabel="動作"
+              />
+              <Pick
+                value={t.ratio}
+                options={numOptions(withValue(RATIO_VALUES, t.ratio), v => `${v.toFixed(2)}×`)}
+                onChange={r => update(i, { ratio: r })}
+                className="w-24"
+                ariaLabel="倍數"
+              />
+              <span className="num w-14 text-right text-sm text-dim">{kg != null ? `${kg} kg` : ""}</span>
+              <button
+                type="button"
+                onClick={() => onChange(value.filter((_, j) => j !== i))}
+                className="press flex size-10 shrink-0 items-center justify-center rounded-lg text-dim"
+                aria-label="移除"
+              >
+                <X className="size-4" />
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+      <div className="mt-3 flex gap-2">
+        {value.length < MAX_STRENGTH_TARGETS && (
+          <button type="button" onClick={add} className="press flex h-10 items-center gap-1 rounded-lg border border-line px-3 text-sm">
+            <Plus className="size-4" /> 新增動作
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => onChange(DEFAULT_STRENGTH_TARGETS)}
+          className="press h-10 rounded-lg px-3 text-sm text-dim"
+        >
+          恢復預設
         </button>
       </div>
     </Card>

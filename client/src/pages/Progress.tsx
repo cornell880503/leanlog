@@ -1,3 +1,4 @@
+import { StrengthGoalsCard } from "@/components/app/StrengthGoals";
 import { AppShell } from "@/components/app/AppShell";
 import { Card, CardTitle, Chips, LoadError, Pick, PlateBar, Stat } from "@/components/app/controls";
 import { fmt, shortDate, todayLocal } from "@/lib/format";
@@ -48,6 +49,7 @@ export default function Progress() {
         </div>
       ) : (
         <div className="space-y-4 fade-up">
+          <StrengthGoalsCard goals={d.strengthGoals} />
           <BodyCard d={d} />
           <JumpCard d={d} />
           <WeeklyCard d={d} />

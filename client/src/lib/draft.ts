@@ -1,4 +1,5 @@
 import type { SessionType } from "@shared/exercises";
+import type { GoalHint } from "@shared/strength";
 import { useCallback, useEffect, useState } from "react";
 
 export interface DraftSet {
@@ -32,6 +33,10 @@ export interface WorkoutDraft {
   prev: Record<string, PrevPerf>;
   bodyweightKg: number;
   templateDate: string | null;
+  /** The date this workout is recorded for (a past date when back-filling). */
+  date?: string;
+  /** Strength-target hints per exercise, snapshotted at start. */
+  goals?: Record<string, GoalHint>;
   finishing?: {
     date: string;
     durationMin: number;

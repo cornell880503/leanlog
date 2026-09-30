@@ -3,7 +3,7 @@ import { Card, CardTitle, LoadError, Pick, numOptions, range, withValue } from "
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { DateChips } from "@/components/workout/SessionMeta";
-import { dateLabel, fmt, todayLocal } from "@/lib/format";
+import { dateLabel, fmt, todayLocal, usePastDateParam } from "@/lib/format";
 import { trpc } from "@/lib/trpc";
 import { cn } from "@/lib/utils";
 import { Plus, X } from "lucide-react";
@@ -28,7 +28,8 @@ function WeightCard() {
   const weights = trpc.body.weights.useQuery();
   const scans = trpc.body.scans.useQuery();
   const today = todayLocal();
-  const [date, setDate] = useState(today);
+  const dateParam = usePastDateParam();
+  const [date, setDate] = useState(dateParam ?? today);
   const [value, setValue] = useState<number | null>(null);
   const [fasted, setFasted] = useState(true);
 
@@ -43,6 +44,7 @@ function WeightCard() {
       toast.success("體重已記錄");
       void utils.body.weights.invalidate();
       void utils.dashboard.summary.invalidate();
+      void utils.calendar.range.invalidate();
     },
     onError: () => toast.error("儲存失敗，請再試一次"),
   });
@@ -50,6 +52,7 @@ function WeightCard() {
     onSuccess: () => {
       void utils.body.weights.invalidate();
       void utils.dashboard.summary.invalidate();
+      void utils.calendar.range.invalidate();
     },
   });
 
@@ -110,7 +113,8 @@ function JumpCard() {
   const jumps = trpc.body.jumps.useQuery();
   const settings = trpc.settings.get.useQuery();
   const today = todayLocal();
-  const [date, setDate] = useState(today);
+  const dateParam = usePastDateParam();
+  const [date, setDate] = useState(dateParam ?? today);
   const [reach, setReach] = useState<number | null>(null);
   useEffect(() => {
     if (reach != null || !jumps.data) return;
@@ -122,6 +126,7 @@ function JumpCard() {
       toast.success("摸高已記錄");
       void utils.body.jumps.invalidate();
       void utils.dashboard.summary.invalidate();
+      void utils.calendar.range.invalidate();
     },
     onError: () => toast.error("儲存失敗，請再試一次"),
   });
@@ -129,6 +134,7 @@ function JumpCard() {
     onSuccess: () => {
       void utils.body.jumps.invalidate();
       void utils.dashboard.summary.invalidate();
+      void utils.calendar.range.invalidate();
     },
   });
   const standing = settings.data?.standingReachCm ?? 238;
@@ -244,6 +250,7 @@ function ScanCard() {
     onSuccess: () => {
       void utils.body.scans.invalidate();
       void utils.dashboard.summary.invalidate();
+      void utils.calendar.range.invalidate();
     },
   });
   const h = (settings.data?.settings.heightCm ?? 179) / 100;
@@ -312,6 +319,7 @@ function ScanDialog({
       toast.success("掃描已記錄");
       void utils.body.scans.invalidate();
       void utils.dashboard.summary.invalidate();
+      void utils.calendar.range.invalidate();
       onOpenChange(false);
     },
     onError: e => toast.error(e.message || "儲存失敗"),

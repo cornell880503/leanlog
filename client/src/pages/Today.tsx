@@ -1,4 +1,6 @@
 import { AppShell } from "@/components/app/AppShell";
+import { StrengthMini } from "@/components/app/StrengthGoals";
+import { TimeStrip } from "@/components/app/TimeStrip";
 import { Card, CardTitle, LoadError } from "@/components/app/controls";
 import {
   AlertDialog,
@@ -10,11 +12,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useDraftPeek, writeDraft } from "@/lib/draft";
-import { dateLabel, fmt, todayLocal } from "@/lib/format";
+import { dateLabel, dayOfWeek, daysAgo, fmt, mdw, shortDate, todayLocal, weekNumber, weekdayLabel } from "@/lib/format";
 import { TYPE_COLOR, TYPE_LABEL } from "@/lib/theme";
 import { trpc } from "@/lib/trpc";
 import { cn } from "@/lib/utils";
-import { isLegWarningDay, setStatus } from "@shared/analytics";
+import { isLegWarningDay, setStatus, type Suggestion } from "@shared/analytics";
 import { TARGET_MUSCLES, type SessionType } from "@shared/exercises";
 import { AlertTriangle, ChevronRight, Scale, Timer } from "lucide-react";
 import { useState } from "react";
@@ -71,7 +73,16 @@ export default function Today() {
         )}
 
         <Card>
-          <div className="text-xs text-dim">{dateLabel(today, today)}・今天建議</div>
+          <div className="flex items-end justify-between gap-2 border-b border-line pb-3">
+            <div className="flex items-baseline gap-2">
+              <span className="num text-3xl font-bold">{shortDate(today)}</span>
+              <span className="text-lg font-semibold">{weekdayLabel(today)}</span>
+            </div>
+            <span className="text-xs text-dim">
+              {today.slice(0, 4)} 第 {weekNumber(today)} 週・本週第 {dayOfWeek(today)} 天
+            </span>
+          </div>
+          <div className="mt-3 text-xs text-dim">今天建議</div>
           {suggestion ? (
             <>
               <div className="mt-1 flex items-baseline gap-2">
@@ -83,6 +94,7 @@ export default function Today() {
                 )}
               </div>
               <p className="mt-1 text-sm text-dim">{suggestion.reason}</p>
+              <BasisLine suggestion={suggestion} today={today} />
               {suggestion.legWarning && (
                 <p className="mt-3 flex gap-2 rounded-lg bg-warn/10 p-3 text-sm text-warn">
                   <AlertTriangle className="mt-0.5 size-4 shrink-0" />
@@ -98,6 +110,11 @@ export default function Today() {
           ) : (
             <div className="mt-2 h-10 w-32 animate-pulse rounded bg-surface-2" />
           )
+          )}
+          {s && (
+            <div className="mt-4 border-t border-line pt-3">
+              <TimeStrip today={today} timeline={s.timeline} upcoming={s.upcoming} />
+            </div>
           )}
         </Card>
 
@@ -177,6 +194,8 @@ export default function Today() {
           )
           )}
         </Card>
+
+        {s && <StrengthMini goals={s.strengthGoals} />}
 
         <Link href="/body" className="press card-iron flex items-center gap-3 p-4">
           <Scale className="size-5 text-dim" />
@@ -303,6 +322,35 @@ function MiniStat({ label, value, unit }: { label: string; value: number; unit: 
         <span className="ml-0.5 text-xs font-sans text-dim">{unit}</span>
       </div>
       <div className="text-xs text-dim">{label}</div>
+    </div>
+  );
+}
+
+/** Spell out what the suggestion is based on, so it doesn't feel like a guess. */
+function BasisLine({ suggestion, today }: { suggestion: Suggestion; today: string }) {
+  const b = suggestion.basis;
+  if (!b) {
+    return <p className="mt-2 text-xs text-dim">還沒有任何重訓紀錄，所以從循環第一天開始算。</p>;
+  }
+  if (b.lastDate === today) return null;
+  return (
+    <div className="mt-3 flex flex-wrap items-center gap-x-1.5 gap-y-1 rounded-lg bg-surface-2 px-3 py-2 text-xs">
+      <span className="text-dim">依據</span>
+      <span>
+        上次重訓 <span className="font-semibold">{mdw(b.lastDate)}</span>
+        <span style={{ color: TYPE_COLOR[b.lastType] }}> {TYPE_LABEL[b.lastType]}</span>
+        <span className="text-dim">（{daysAgo(b.lastDate, today)}）</span>
+      </span>
+      <span className="text-dim">→</span>
+      <span>
+        已休 <span className="num font-semibold">{b.restTaken}</span> 天／需休{" "}
+        <span className="num font-semibold">{b.restNeeded}</span> 天
+        {b.vbCount > 0 && <span className="text-dim">（期間打球 {b.vbCount} 次，各多休 1 天）</span>}
+      </span>
+      <span className="text-dim">→</span>
+      <span className="font-semibold" style={{ color: TYPE_COLOR[suggestion.type] }}>
+        {suggestion.type === "rest" ? `今天休息，下次${TYPE_LABEL[suggestion.nextStrength]}` : `今天${TYPE_LABEL[suggestion.type]}`}
+      </span>
     </div>
   );
 }

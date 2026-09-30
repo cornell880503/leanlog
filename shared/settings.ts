@@ -9,6 +9,23 @@ export interface Milestone {
   bfMax: number;
 }
 
+/** Target estimated 1RM for one lift, as a multiple of current bodyweight. */
+export interface StrengthTarget {
+  exerciseKey: string;
+  /** e1RM ÷ bodyweight. For bodyweight lifts (pull-ups) the load includes bodyweight. */
+  ratio: number;
+}
+
+export const MAX_STRENGTH_TARGETS = 8;
+
+export const DEFAULT_STRENGTH_TARGETS: StrengthTarget[] = [
+  { exerciseKey: "back_squat", ratio: 1.5 },
+  { exerciseKey: "trap_bar_deadlift", ratio: 1.75 },
+  { exerciseKey: "bench_press", ratio: 1.0 },
+  { exerciseKey: "ohp", ratio: 0.65 },
+  { exerciseKey: "pull_up", ratio: 1.4 },
+];
+
 export interface Settings {
   heightCm: number;
   bfMin: number;
@@ -22,6 +39,7 @@ export interface Settings {
   hardSetRpeMin: number;
   loadSpikeRatio: number;
   milestones: Milestone[];
+  strengthTargets: StrengthTarget[];
 }
 
 export const DEFAULT_WEEKLY_TARGETS: Record<string, [number, number]> = {
@@ -54,6 +72,7 @@ export const DEFAULT_SETTINGS: Settings = {
     { name: "M2", by: "2027-03-31", ffmMinKg: 61.5, bfMax: 12.5 },
     { name: "最終", by: "2027-07-31", ffmMinKg: 62.5, bfMax: 12.0 },
   ],
+  strengthTargets: DEFAULT_STRENGTH_TARGETS,
 };
 
 export const DEFAULT_STANDING_REACH_CM = 238;
@@ -65,6 +84,22 @@ function num(v: unknown, fallback: number, min: number, max: number): number {
   const n = typeof v === "number" ? v : Number(v);
   if (!Number.isFinite(n)) return fallback;
   return Math.min(max, Math.max(min, n));
+}
+
+/** Stored strength targets: valid keys, ratio 0.2–3 (0.05 steps), no duplicates, at most 8. */
+export function normalizeStrengthTargets(raw: unknown): StrengthTarget[] {
+  if (!Array.isArray(raw)) return DEFAULT_STRENGTH_TARGETS;
+  const out: StrengthTarget[] = [];
+  for (const t of raw) {
+    if (!t || typeof t !== "object") continue;
+    const key = (t as StrengthTarget).exerciseKey;
+    if (typeof key !== "string" || !key || key.length > 64) continue;
+    if (out.some(o => o.exerciseKey === key)) continue;
+    const ratio = Math.round(num((t as StrengthTarget).ratio, 1, 0.2, 3) * 20) / 20;
+    out.push({ exerciseKey: key, ratio });
+    if (out.length >= MAX_STRENGTH_TARGETS) break;
+  }
+  return out;
 }
 
 /** Merge stored (possibly partial or outdated) settings over defaults. */
@@ -120,5 +155,6 @@ export function normalizeSettings(raw: unknown): Settings {
     hardSetRpeMin: num(r.hardSetRpeMin, d.hardSetRpeMin, 5, 10),
     loadSpikeRatio: num(r.loadSpikeRatio, d.loadSpikeRatio, 1.05, 3),
     milestones,
+    strengthTargets: normalizeStrengthTargets(r.strengthTargets),
   };
 }

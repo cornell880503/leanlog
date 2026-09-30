@@ -1,3 +1,4 @@
+import type { GoalHint } from "@shared/strength";
 import type { DraftExercise, PrevPerf } from "@/lib/draft";
 import { uid } from "@/lib/format";
 import type { ExerciseDef, SessionType } from "@shared/exercises";
@@ -66,6 +67,7 @@ export function WorkoutEditor({
   all,
   bodyweightKg,
   dumbbellStep,
+  goals = {},
 }: {
   type: SessionType;
   exercises: DraftExercise[];
@@ -75,6 +77,7 @@ export function WorkoutEditor({
   all: ExerciseDef[];
   bodyweightKg: number;
   dumbbellStep: number;
+  goals?: Record<string, GoalHint>;
 }) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [replaceId, setReplaceId] = useState<string | null>(null);
@@ -116,6 +119,7 @@ export function WorkoutEditor({
           ex={lookup(item.exerciseKey)}
           item={item}
           prev={prev[item.exerciseKey]}
+          goal={goals[item.exerciseKey]}
           type={type}
           bodyweightKg={bodyweightKg}
           dumbbellStep={dumbbellStep}
