@@ -39,6 +39,8 @@ import {
   updateSession,
   workoutContext,
 } from "../data/sessions";
+import { trendData } from "../data/trends";
+import { TREND_LIMITS } from "../../shared/trends";
 
 const dateStr = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "日期格式錯誤");
 
@@ -366,6 +368,22 @@ export const calendarRouter = router({
     }),
 });
 
+export const trendsRouter = router({
+  series: protectedProcedure
+    .input(
+      z
+        .object({ period: z.enum(["week", "month"]), count: z.number().int().min(1), today: dateStr })
+        .refine(v => v.count <= TREND_LIMITS[v.period], {
+          message: `一次最多看 ${TREND_LIMITS.week} 週或 ${TREND_LIMITS.month} 個月`,
+          path: ["count"],
+        })
+    )
+    .query(async ({ ctx, input }) => {
+      const db = await requireDb();
+      const { lookup } = await buildLookup(db, ctx.user.id);
+      return trendData(db, ctx.user.id, lookup, input.period, input.count, input.today);
+    }),
+});
 export const exportRouter = router({
   csv: protectedProcedure.mutation(async ({ ctx }) => {
     const db = await requireDb();

@@ -21,6 +21,10 @@
       "title": "進度"
     },
     {
+      "path": "/progress/trends",
+      "title": "訓練趨勢"
+    },
+    {
       "path": "/history",
       "title": "日曆"
     },

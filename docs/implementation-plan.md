@@ -269,3 +269,51 @@
 - 整合測試：`calendar.range` 日期過濾與權限、`settings.update` 儲存力量目標。
 - `pnpm check`、既有測試全過；一次唯讀獨立審查（串接檢查）。
 - 存檔點推到 GitHub；**發布需使用者核准**。
+
+---
+
+## 第三輪：每週／每月訓練總量與強度成長曲線（2026-09-30 22:55 使用者需求）
+
+> 需求原文：「在網站上新增一個功能，讓我可以檢視過去每週或每月的訓練總量與強度成長曲線。」
+
+### 產品行為
+
+新頁面 **訓練趨勢** `/progress/trends`（在「進度」分頁底下，分頁列仍亮「進度」）。入口：進度頁上方的「訓練量與強度趨勢」連結卡、每週訓練量卡底部「看更長的趨勢」、手冊「怎麼用」表。
+
+1. **期間切換**：`週`（週一到週日）／`月`（自然月）。範圍：週＝近 8／12／26／52 週；月＝近 6／12／24 個月。選擇寫在網址（`?p=week&n=12`），重新整理或返回時保留。最後一格是「本週／本月（進行中）」，畫得較淡並標示進行中。
+2. **訓練總量圖**（長條圖，依訓練類型疊色：腿／背／胸／排球／其他）。指標可切換：
+   - **總量（kg）**：重量×次數加總，跟每次訓練摘要的「容量」算法一致（徒手動作用當時體重×係數估算；跳躍、計時動作不計）。
+   - **有效組數**：跟既有定義一致（RPE ≥ 設定值，未填 RPE 也算）。
+   - **訓練負荷**：sRPE × 分鐘（排球也算）。
+   - **訓練次數**。
+   - 類型篩選：全部／腿／背／胸（負荷與次數多一個「排球」）。
+   - 虛線＝已完成期間的平均。
+3. **點任一格**（長條或折線點）顯示該期明細：日期區間、次數、時數、總量、有效組、負荷、跳躍、平均 RPE、跟前一期比的增減（%）；按鈕「在日曆看這週／這個月」連到 `/history?view=week|month&d=<開始日>`。
+4. **強度成長圖**（折線圖）。指標可切換：
+   - **主項 e1RM**：每期最佳估算 1RM（Epley，跟力量目標同一套算法；徒手動作含體重）。預設顯示設定裡的力量目標動作（有紀錄的），可點選加入／移除其他有紀錄的動作（最多同時 5 條）。單位可切 `kg`／`相對起點 %`（每個動作在範圍內第一個有紀錄的期間＝100%）。沒練到的期間斷點用線連起來。
+   - **平均 RPE**（工作組、有填 RPE 的）。
+   - **平均每下負重**（kg）＝工作組的總量 ÷ 總次數（只含有負重的複合／孤立動作）。
+   - 圖下列出每個動作在範圍內的成長：「臥推 58.3 → 64.2 kg（+10.1%）」。
+5. **重點摘要**（頁面上方）：範圍內共訓練幾次、總量、有效組；最近一個**完整**期間跟前一期比：總量、有效組、負荷的增減。
+6. 空狀態：範圍內沒有紀錄時，提示去記錄或切換更長範圍，不顯示空圖。讀取失敗顯示既有的重試元件。
+
+### 資料與 API
+
+- `shared/trends.ts`（純函式，前後端共用、可單元測試）：
+  - `periodStart(d, p)`、`periodEnd(start, p)`、`shiftPeriod(start, p, n)`、`periodStarts(today, p, count)`（最舊在前，最後一格是目前期間）。
+  - `trendSeries({ sessions, lookup, weights, fallbackBw, rpeMin, targetKeys, today, period, count })` → `{ period, buckets[], lifts[] }`。每個 bucket：`start/end/inProgress/sessions/strengthSessions/volleyballSessions/durationMin/volume/hardSets/load/jumps/byType{type:{sessions,volume,hardSets,load}}/avgRpe/avgLoadPerRep/e1rm{key:best}`。`lifts`：範圍內有 e1RM 的動作（`key,name,isTarget,periods`），力量目標在前（照設定順序），其餘依有紀錄的期間數排序。今天之後的訓練不計。
+  - `growth(values)`（第一個與最後一個非空值的差與 %）、`compareLastComplete(buckets, metric)`（最近完整期間 vs 前一期）。
+- tRPC `trends.series`（protected）：輸入 `{ period: "week"|"month", count, today }`，週 1–104、月 1–36，超出回 400。只讀當前使用者的資料。
+- 不需要新的資料表或遷移。
+
+### 前端結構
+
+- `client/src/pages/Trends.tsx`（lazy route `/progress/trends`，`AppShell back="/progress"`）。
+- 圖表沿用 recharts 與進度頁的 AXIS/TOOLTIP 深色樣式；顏色用 `TYPE_COLOR`。
+- 路由清單 `client/public/manus-routes.json` 加 `/progress/trends`「訓練趨勢」。
+
+### 驗證
+
+- 單元測試：期間邊界（跨月、跨年、週一起算）、進行中標記、類型拆分、總量／有效組與 `summarizeSession` 一致、平均 RPE 排除熱身與空值、e1RM 每期最佳、動作排序、成長與比較函式、今天之後不計。
+- 整合測試（真實資料庫、測完清除）：跨週與跨月的訓練彙整正確、只看到自己的資料、`count` 超出上限被拒。
+- `pnpm check`、全部測試通過；Plan Mode 專案 → 交付前做一次唯讀獨立審查。

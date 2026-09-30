@@ -6,7 +6,7 @@ import { trpc, type RouterOutputs } from "@/lib/trpc";
 import { cn } from "@/lib/utils";
 import { setStatus } from "@shared/analytics";
 import { TARGET_MUSCLES } from "@shared/exercises";
-import { CheckCircle2, Circle, XCircle } from "lucide-react";
+import { ChevronRight, CheckCircle2, Circle, LineChart as LineChartIcon, XCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
 import {
@@ -50,6 +50,17 @@ export default function Progress() {
       ) : (
         <div className="space-y-4 fade-up">
           <StrengthGoalsCard goals={d.strengthGoals} />
+          <Link
+            href="/progress/trends"
+            className="press flex items-center gap-3 rounded-xl border border-line bg-surface p-4"
+          >
+            <LineChartIcon className="size-6 shrink-0 text-brand" />
+            <div className="flex-1">
+              <div className="font-semibold">訓練量與強度趨勢</div>
+              <div className="text-xs text-dim">每週／每月的總量、有效組、負荷，與主項 e1RM 成長曲線</div>
+            </div>
+            <ChevronRight className="size-5 text-dim" />
+          </Link>
           <BodyCard d={d} />
           <JumpCard d={d} />
           <WeeklyCard d={d} />
@@ -285,6 +296,10 @@ function WeeklyCard({ d }: { d: Summary }) {
         })}
       </ul>
       <p className="mt-2 text-xs text-dim">淡綠框＝目標範圍。主要肌群 1 組、次要 0.5 組，RPE 7 以上才算有效組。</p>
+      <Link href="/progress/trends?p=week&n=12" className="mt-2 inline-flex items-center gap-1 text-sm text-brand">
+        看更長的趨勢（每週／每月）
+        <ChevronRight className="size-4" />
+      </Link>
 
       <div className="mt-4 text-sm font-medium">訓練負荷（sRPE×分鐘）與跳躍量</div>
       <div className="mt-2 h-40">

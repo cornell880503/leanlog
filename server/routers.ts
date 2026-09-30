@@ -5,6 +5,7 @@ import { publicProcedure, router } from "./_core/trpc";
 import {
   bodyRouter,
   calendarRouter,
+  trendsRouter,
   dashboardRouter,
   exercisesRouter,
   exportRouter,
@@ -31,6 +32,7 @@ export const appRouter = router({
   settings: settingsRouter,
   dashboard: dashboardRouter,
   calendar: calendarRouter,
+  trends: trendsRouter,
   export: exportRouter,
 });
 
