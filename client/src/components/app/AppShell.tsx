@@ -1,5 +1,5 @@
-import { startLogin } from "@/const";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { beginLogin } from "@/lib/login";
 import { cn } from "@/lib/utils";
 import { LOGO_URL } from "@/lib/theme";
 import { BookOpen, CalendarDays, ChevronLeft, Home, LineChart, Scale, Settings } from "lucide-react";
@@ -126,7 +126,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
         </div>
         <button
           type="button"
-          onClick={() => startLogin()}
+          onClick={() => beginLogin()}
           className="press h-14 w-full rounded-xl bg-brand text-lg font-semibold text-brand-ink"
         >
           登入開始記錄

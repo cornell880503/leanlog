@@ -1,4 +1,4 @@
-import { startLogin } from "@/const";
+import { beginLogin } from "@/lib/login";
 import { trpc } from "@/lib/trpc";
 import { TRPCClientError } from "@trpc/client";
 import { useCallback, useEffect, useMemo } from "react";
@@ -80,7 +80,7 @@ export function useAuth(options?: UseAuthOptions) {
     if (redirectPath) {
       window.location.href = redirectPath;
     } else {
-      startLogin();
+      beginLogin();
     }
   }, [
     redirectOnUnauthenticated,

@@ -42,13 +42,14 @@ const legDay = session("2026-09-15", "leg", [
   set("back_squat", 60, 5, null, { isWarmup: true }),
   set("back_squat", 100, 5, 8),
   set("back_squat", 100, 5, 9),
+  set("kb_swing", 24, 10, 8), // power: counts for RPE, not for hard sets / load per rep
 ]);
 const chestDay = session("2026-09-22", "chest", [set("bench_press", 60, 8, 8), set("bench_press", 65, 5, 9)], {
   durationMin: 50,
   srpe: 8,
 });
 const volleyball = session("2026-09-26", "volleyball", [], { durationMin: 90, srpe: 6, jumps: 120 });
-const backDay = session("2026-09-29", "back", [set("pull_up", 0, 8, 8, { bodyweightKg: 70 }), set("plank", 0, 60, 7)], {
+const backDay = session("2026-09-29", "back", [set("pull_up", 0, 8, 8, { bodyweightKg: 70 }), set("plank", 0, 60, 7), set("box_jump", 0, 5, 9)], {
   durationMin: 45,
 });
 const future = session("2026-10-02", "chest", [set("bench_press", 100, 5, 8)]);
@@ -117,10 +118,11 @@ describe("trendSeries (weekly)", () => {
   });
 
   it("averages RPE over working sets only and load per rep over loaded rep-based sets", () => {
-    expect(w1.avgRpe).toBe(8.5); // warm-up (no RPE) excluded
+    expect(w1.avgRpe).toBe(8.3); // (8 + 9 + 8) / 3; warm-up (no RPE) excluded, power set included
     expect(w1.avgLoadPerRep).toBe(100); // (100×5 + 100×5) / 10, warm-up excluded
-    expect(w3.avgRpe).toBe(7.5); // pull-up 8 + plank 7 (core counts for RPE)
-    expect(w3.avgLoadPerRep).toBe(70); // bodyweight pull-up; timed plank excluded
+    expect(w3.avgRpe).toBe(8); // pull-up 8 + plank 7 + box jump 9: every working set with RPE counts
+    expect(w3.avgLoadPerRep).toBe(70); // bodyweight pull-up; timed plank and plyo box jump excluded
+    expect(w3.e1rm.box_jump).toBeUndefined();
   });
 
   it("keeps the best e1RM per lift per period", () => {

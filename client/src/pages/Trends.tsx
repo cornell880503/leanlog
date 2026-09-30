@@ -109,13 +109,21 @@ export default function Trends() {
   const count = RANGES[period].some(r => r.value === rawCount) ? rawCount : DEFAULT_COUNT[period];
   const setUrl = (p: TrendPeriod, n: number) => navigate(`/progress/trends?p=${p}&n=${n}`, { replace: true });
 
-  const q = trpc.trends.series.useQuery({ period, count, today }, { placeholderData: prev => prev });
-  const data = q.data;
+  const q = trpc.trends.series.useQuery({ period, count, today });
+  // Only render a response that matches the current selection, so labels, ranges
+  // and calendar links never mix an old request with the new URL.
+  const data =
+    q.data && q.data.period === period && q.data.today === today && q.data.buckets.length === count ? q.data : undefined;
 
-  // Selected period (index into buckets); defaults to the latest.
-  const [sel, setSel] = useState<number | null>(null);
-  useEffect(() => setSel(null), [period, count]);
-  const selIndex = data ? Math.min(sel ?? data.buckets.length - 1, data.buckets.length - 1) : 0;
+  // Selected period (index into buckets), tied to the range it was picked in; defaults to the latest.
+  const rangeKey = `${period}:${count}:${today}`;
+  const [sel, setSelState] = useState<{ key: string; index: number } | null>(null);
+  const setSel = (index: number) => setSelState({ key: rangeKey, index });
+  const selIndex = data
+    ? sel && sel.key === rangeKey
+      ? Math.min(sel.index, data.buckets.length - 1)
+      : data.buckets.length - 1
+    : 0;
 
   const empty = data ? data.buckets.every(b => b.sessions === 0) : false;
 
@@ -142,7 +150,7 @@ export default function Trends() {
           </p>
         </Card>
 
-        {!data && q.isError ? (
+        {!data && q.isError && !q.isFetching ? (
           <LoadError what="訓練趨勢" onRetry={() => void q.refetch()} />
         ) : !data ? (
           <div className="space-y-4">
@@ -187,14 +195,29 @@ function EmptyState({
     <Card>
       <CardTitle>這段期間沒有訓練紀錄</CardTitle>
       {data.firstSessionDate ? (
-        <p className="text-sm text-dim">
-          你最早的紀錄在 {data.firstSessionDate.replaceAll("-", "/")}，近 {count} {unitWord(period)}內沒有資料。
-          {longer && (
-            <button type="button" className="ml-1 underline" onClick={() => onLonger(longer.value)}>
-              改看{longer.label}
-            </button>
-          )}
-        </p>
+        <>
+          <p className="text-sm text-dim">
+            你最早的紀錄在 {data.firstSessionDate.replaceAll("-", "/")}，近 {count} {unitWord(period)}內沒有資料。
+          </p>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            {longer ? (
+              <button
+                type="button"
+                className="press h-11 rounded-lg border border-line text-sm"
+                onClick={() => onLonger(longer.value)}
+              >
+                改看{longer.label}
+              </button>
+            ) : (
+              <Link href="/history" className="press flex h-11 items-center justify-center rounded-lg border border-line text-sm">
+                到日曆補記
+              </Link>
+            )}
+            <Link href="/" className="press flex h-11 items-center justify-center rounded-lg bg-brand text-sm font-semibold text-brand-ink">
+              去今天頁開始訓練
+            </Link>
+          </div>
+        </>
       ) : (
         <p className="text-sm text-dim">
           還沒有任何訓練紀錄。

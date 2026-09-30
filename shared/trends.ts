@@ -84,7 +84,7 @@ export interface TrendBucket {
   load: number;
   jumps: number;
   byType: Record<SessionType, TypeTotals>;
-  /** Working sets with an RPE entered (compound / isolation / core). */
+  /** Working (non-warm-up) sets with an RPE entered, any category. */
   rpeSets: number;
   avgRpe: number | null;
   /** Reps of loaded working sets (compound / isolation, rep-based). */
@@ -131,8 +131,6 @@ function emptyTypes(): Record<SessionType, TypeTotals> {
   for (const t of TREND_TYPES) out[t] = { sessions: 0, volume: 0, hardSets: 0, load: 0 };
   return out;
 }
-
-const RPE_CATEGORIES = new Set(["compound", "isolation", "core"]);
 
 export function trendSeries(input: TrendInput): TrendSeries {
   const { sessions, lookup, weights, fallbackBw, rpeMin, targetKeys, today, period, count } = input;
@@ -188,7 +186,8 @@ export function trendSeries(input: TrendInput): TrendSeries {
     for (const set of s.sets) {
       const ex = lookup(set.exerciseKey);
       if (!ex || set.isWarmup) continue;
-      if (set.rpe != null && RPE_CATEGORIES.has(ex.category)) {
+      // Every working set with an RPE entered counts (any category).
+      if (set.rpe != null) {
         rpeSum[i] += set.rpe;
         b.rpeSets += 1;
       }
